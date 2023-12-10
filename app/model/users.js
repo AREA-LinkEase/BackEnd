@@ -12,7 +12,7 @@ const User = sequelize.define('User', {
             type: DataTypes.STRING,
             allowNull: false
         },
-        token: {
+        password: {
             type: DataTypes.STRING,
             allowNull: false
         },
@@ -23,7 +23,52 @@ const User = sequelize.define('User', {
     }, {
         timestamps: false,
     }
-);
-  
-export { User };
+)
 
+export async function getAllUsers() {
+    const users = await User.findAll()
+    return users
+}
+
+export async function getUserById(id) {
+    const user = await User.findOne({
+        where: {
+            id: id
+        }
+    })
+    return user
+}
+
+export async function getUserByUsername(username) {
+    const user = await User.findOne({
+        where: {
+            username: username
+        }
+    })
+    return user
+}
+
+export async function getUserByEmail(email) {
+    const user = await User.findOne({
+        where: {
+            email: email
+        }
+    })
+    return user
+}
+
+export async function createUser(username, email, password, services) {
+    const newUser = await User.create({
+        username: username,
+        email: email,
+        password: password,
+        services: services
+    });
+    return newUser
+}
+
+export async function deleteUser(user) {
+    await user.destroy()
+} 
+
+export { User }
