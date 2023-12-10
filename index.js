@@ -1,10 +1,9 @@
-import {app, root} from './config/express.js'
+import { app, root } from './config/express.js'
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { users } from './core/controller/socket.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import {executeAuthMiddleware} from "./app/middleware/auth.js";
 
 export const DIR_NAME = dirname(fileURLToPath(import.meta.url));
 
@@ -21,7 +20,6 @@ app.use('/Assets', root.static('Public'))
 app.use(root.urlencoded({extended: true}))
 app.use(root.json())
 
-executeAuthMiddleware(app)
 
 io.on("connection", function (socket) {
     users.push(socket)
