@@ -1,6 +1,86 @@
 import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById } from "../model/workspaces.js"
 
 export default function index(app) {
+
+    /**
+     * @openapi
+     * /workspaces:
+     *   get:
+     *     description: Get all workspaces
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     * /workspace:
+     *   post:
+     *     description: Create a new workspace
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               title:
+     *                 type: string
+     *               description:
+     *                 type: string
+     *               is_private:
+     *                 type: boolean
+     *               users_id:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               variables:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               secrets:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *     responses:
+     *       201:
+     *         description: Success
+     *       422:
+     *         description: Missing field
+     *       500:
+     *         description: Error
+     * /workspace/{workspace_id}:
+     *   get:
+     *     description: Get workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID du workspace à récupérer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     * /deleteworkspace/{workspace_id}:
+     *   delete:
+     *     description: Delete workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: automate_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID du workspace à supprimer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     */
+
     app.get('/workspaces', async (request, response) => {
         try {
             let json = await getAllWorkspaces()
@@ -20,7 +100,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.post('/workspace/', async (request, response) => {
+    app.post('/workspace', async (request, response) => {
         let body = request.body
 
         if (body.title === undefined || body.description === undefined || body.is_private === undefined,
@@ -41,7 +121,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.delete('/workspace/:workspace_id', async (request, response) => {
+    app.delete('/deleteworkspace/:workspace_id', async (request, response) => {
         let workspace_id = request.params.workspace_id
 
         try {

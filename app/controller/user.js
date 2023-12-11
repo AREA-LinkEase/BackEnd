@@ -3,15 +3,96 @@ import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUs
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 
 export default function index(app) {
+
     /**
      * @openapi
-     * /:
-     *   get:
-     *     description: Welcome to swagger-jsdoc!
+     * /login:
+     *   post:
+     *     description: Login
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               username:
+     *                 type: string
+     *               password:
+     *                 type: string
      *     responses:
      *       200:
-     *         description: Returns a mysterious string.
+     *         description: Success
+     *       422:
+     *         description: Missing Field
+     *       500:
+     *         description: Error
+     * /users:
+     *   get:
+     *     description: Get all users
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     * /user:
+     *   post:
+     *     description: Create a new user
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               username:
+     *                 type: string
+     *               password:
+     *                 type: string
+     *               email:
+     *                 type: string
+     *               services:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *     responses:
+     *       201:
+     *         description: Success
+     *       422:
+     *         description: Missing field
+     *       500:
+     *         description: Error
+     * /user/{user_id}:
+     *   get:
+     *     description: Get user by id
+     *     parameters:
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID de l'utilisateur à récupérer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     * /deleteuser/{user_id}:
+     *   delete:
+     *     description: Delete user by id
+     *     parameters:
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID de l'utilisateur à supprimer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
      */
+
     app.post('/login', async (request, response) => {
         let username = request.body.username
         let plainPassword = request.body.password
@@ -67,7 +148,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.delete('/user/:user_id', async (request, response) => {
+    app.delete('/deleteuser/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
         try {
