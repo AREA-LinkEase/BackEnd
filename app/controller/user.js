@@ -3,6 +3,15 @@ import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUs
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 
 export default function index(app) {
+    /**
+     * @openapi
+     * /:
+     *   get:
+     *     description: Welcome to swagger-jsdoc!
+     *     responses:
+     *       200:
+     *         description: Returns a mysterious string.
+     */
     app.post('/login', async (request, response) => {
         let username = request.body.username
         let plainPassword = request.body.password

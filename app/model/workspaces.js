@@ -1,9 +1,7 @@
 import { DataTypes } from 'sequelize'
-import { connectDatabase } from '../getDataBaseConnection.js'
+import { getSequelize } from '../getDataBaseConnection.js'
 
-const sequelize = await connectDatabase()
-
-const Workspace = sequelize.define('Workspace', {
+const Workspace = getSequelize().define('Workspace', {
         title: {
             type: DataTypes.STRING,
             allowNull: false

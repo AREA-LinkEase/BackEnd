@@ -1,9 +1,7 @@
 import { DataTypes } from 'sequelize'
-import { connectDatabase } from '../getDataBaseConnection.js'
+import { getSequelize } from '../getDataBaseConnection.js'
 
-const sequelize = await connectDatabase()
-
-const Automate = sequelize.define('Automate', {
+const Automate = getSequelize().define('Automate', {
         title: {
             type: DataTypes.STRING,
             allowNull: false

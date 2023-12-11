@@ -1,9 +1,7 @@
 import { DataTypes } from 'sequelize'
-import { connectDatabase } from '../getDataBaseConnection.js'
+import { getSequelize } from '../getDataBaseConnection.js'
 
-const sequelize = await connectDatabase()
-
-const User = sequelize.define('User', {
+const User = getSequelize().define('User', {
         username: {
             type: DataTypes.STRING,
             allowNull: false

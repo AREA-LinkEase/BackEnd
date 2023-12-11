@@ -1,10 +1,22 @@
 import { Sequelize } from 'sequelize'
 
-let sequelizeInstance = null
+let sequelizeInstance = null;
+
+export function getSequelize() {
+    return sequelizeInstance;
+}
 
 export async function connectDatabase() {
     if (!sequelizeInstance) {
-        sequelizeInstance = new Sequelize('mysql://root:root@localhost:3306/linkease')
+        sequelizeInstance = new Sequelize(
+            'linkease',
+            'admin',
+            '@Password1234',
+             {
+               host: 'localhost',
+               dialect: 'mysql'
+             }
+           );
         try {
             await sequelizeInstance.authenticate()
             console.log('Connexion à la base de données MySQL établie avec succès.')
