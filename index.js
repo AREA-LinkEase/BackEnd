@@ -1,4 +1,4 @@
-import { app, router, root } from './config/express.js'
+import { app, root } from './config/express.js'
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { users } from './core/controller/socket.js';
@@ -38,7 +38,7 @@ connectDatabase().then(() => {
     });
 
     import('./core/controller/controller.js').then((controller) => {
-        controller.default(router, "default")
+        controller.default(app, "default")
     })
 })
 

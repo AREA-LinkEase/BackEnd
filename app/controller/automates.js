@@ -1,6 +1,90 @@
 import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById } from "../model/automates.js"
 
 export default function index(app) {
+
+    /**
+     * @openapi
+     * /automates:
+     *   get:
+     *     tags:
+     *       - automates
+     *     description: Get all automates
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     *   post:
+     *     tags:
+     *       - automates
+     *     description: Create a new automate
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               title:
+     *                 type: string
+     *               workspace_id:
+     *                 type: integer
+     *               workflow:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               variables:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               secrets:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *     responses:
+     *       201:
+     *         description: Success
+     *       422:
+     *         description: Missing field
+     *       500:
+     *         description: Error
+     * /automates/{automate_id}:
+     *   get:
+     *     tags:
+     *       - automates
+     *     description: Get automate by id
+     *     parameters:
+     *       - in: path
+     *         name: automate_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID de l'automate à récupérer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     *   delete:
+     *     tags:
+     *       - automates
+     *     description: Delete automate by id
+     *     parameters:
+     *       - in: path
+     *         name: automate_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: ID de l'automate à supprimer
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     */
+
     app.get('/automates', async (request, response) => {
         try {
             let json = await getAllAutomates()
@@ -9,7 +93,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.get('/automate/:automate_id', async (request, response) => {
+    app.get('/automates/:automate_id', async (request, response) => {
         let automate_id = request.params.automate_id
 
         try {
@@ -20,7 +104,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.post('/automate/', async (request, response) => {
+    app.post('/automates', async (request, response) => {
         let body = request.body
 
         if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined,
@@ -40,7 +124,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.delete('/automate/:automate_id', async (request, response) => {
+    app.delete('/automates/:automate_id', async (request, response) => {
         let automate_id = request.params.automate_id
 
         try {
