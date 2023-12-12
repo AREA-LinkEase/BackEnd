@@ -8,6 +8,8 @@ export default function index(app) {
      * @openapi
      * /login:
      *   post:
+     *     tags:
+     *       - users
      *     description: Login
      *     requestBody:
      *       content:
@@ -26,16 +28,10 @@ export default function index(app) {
      *         description: Missing Field
      *       500:
      *         description: Error
-     * /users:
-     *   get:
-     *     description: Get all users
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Error
-     * /user:
+     * /register:
      *   post:
+     *     tags:
+     *       - users
      *     description: Create a new user
      *     requestBody:
      *       content:
@@ -61,8 +57,20 @@ export default function index(app) {
      *         description: Missing field
      *       500:
      *         description: Error
-     * /user/{user_id}:
+     * /users:
      *   get:
+     *     tags:
+     *       - users
+     *     description: Get all users
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     * /users/{user_id}:
+     *   get:
+     *     tags:
+     *       - users
      *     description: Get user by id
      *     parameters:
      *       - in: path
@@ -76,8 +84,9 @@ export default function index(app) {
      *         description: Success
      *       500:
      *         description: Error
-     * /deleteuser/{user_id}:
      *   delete:
+     *     tags:
+     *       - users
      *     description: Delete user by id
      *     parameters:
      *       - in: path

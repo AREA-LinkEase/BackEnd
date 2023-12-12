@@ -46,6 +46,20 @@ export async function getWorkspaceById(id) {
     return workspace
 }
 
+export async function getWorkspaceByPrivacy(bool) {
+    const workspaces = await Workspace.findAll({
+        where: {
+            is_private: bool
+        }
+    })
+    return workspaces
+}
+
+export async function updateWorkspace(id, changes) {
+    const workspace = await getWorkspaceById(id)
+    await workspace.update(changes)
+}
+
 export async function createWorkspace(title, description, is_private, users_id, variables, secrets) {
     const newWorkspace = await Workspace.create({
         title: title,
