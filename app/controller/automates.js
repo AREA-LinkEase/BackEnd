@@ -51,18 +51,69 @@ export default function index(app) {
      *         description: Missing field
      *       500:
      *         description: Error
-     * /automates/{automate_id}:
+     * /automates/{workspace_id}/{automate_id}:
      *   get:
      *     tags:
      *       - automates
      *     description: Get automate by id
      *     parameters:
      *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
      *         name: automate_id
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'automate à récupérer
+     *         description: the ID of the automate to get
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     *   put:
+     *     tags:
+     *       - automates
+     *     description: Update automate by ID
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
+     *         name: automate_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the automate to update
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               title:
+     *                 type: string
+     *               workflow:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               variables:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
+     *               secrets:
+     *                 type: object
+     *                 properties:
+     *                   testJson:
+     *                     type: string
      *     responses:
      *       200:
      *         description: Success
@@ -74,11 +125,17 @@ export default function index(app) {
      *     description: Delete automate by id
      *     parameters:
      *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
      *         name: automate_id
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'automate à supprimer
+     *         description: the ID of the automate to delete
      *     responses:
      *       200:
      *         description: Success

@@ -45,14 +45,11 @@ export default function index(app) {
      *                 type: string
      *               email:
      *                 type: string
-     *               services:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
      *     responses:
      *       201:
      *         description: Success
+     *       409:
+     *         description: Username or email already taken
      *       422:
      *         description: Missing field
      *       500:
@@ -78,7 +75,7 @@ export default function index(app) {
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'utilisateur à récupérer
+     *         description: the ID of the user to get
      *     responses:
      *       200:
      *         description: Success
@@ -94,7 +91,7 @@ export default function index(app) {
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'utilisateur à supprimer
+     *         description: the ID of the user to delete
      *     responses:
      *       200:
      *         description: Success
