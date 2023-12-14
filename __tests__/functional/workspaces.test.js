@@ -1,10 +1,15 @@
 import request from 'supertest';
 import { app } from '../../config/express.js';
+import {setupTest} from "../../testBase.js";
+import {getSequelize} from "../../app/getDataBaseConnection.js";
 
 beforeAll(async () => {
-    await app.listen(5050);
+    await setupTest()
 });
 
+afterAll(() => {
+    getSequelize().close()
+})
 
 describe('GET /workspaces', () => {
     test('should respond with status 200 and a JSON object', async () => {
@@ -13,3 +18,4 @@ describe('GET /workspaces', () => {
         expect(response.status).toBe(200);
     });
 });
+
