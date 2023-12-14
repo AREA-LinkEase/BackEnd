@@ -5,13 +5,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles",
     "start": "node index.js",
     "linter": "eslint \"**/*.js\""
   },
   "author": "Younes, Simon, Adil, Kéziah et Thomas",
   "license": "ISC",
   "dependencies": {
+    "@jest/globals": "^29.7.0",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.0.1",
     "ejs": "^3.1.8",
