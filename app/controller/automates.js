@@ -174,7 +174,6 @@ export default function index(app) {
             body.variables === undefined || body.secrets === undefined)
             return response.status(422).json({error: "missing field"})
         let workspace = await getWorkspaceById(workspace_id)
-        console.log(workspace);
         if (workspace === null)
             return response.status(404).json({error: "unknown workspace"})
         try {
