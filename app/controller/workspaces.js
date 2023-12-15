@@ -153,8 +153,7 @@ export default function index(app) {
     app.post('/workspaces', async (request, response) => {
         let body = request.body
 
-        if (body.title === undefined || body.description === undefined || body.is_private === undefined,
-            body.users_id === undefined || body.variables === undefined || body.secrets === undefined)
+        if (body.title === undefined || body.description === undefined || body.is_private === undefined)
             return response.status(422).json({error: "missing field"})
         try {
             let json = await createWorkspace(
