@@ -65,7 +65,8 @@ export async function createUser(username, email, password, services) {
     return newUser
 }
 
-export async function deleteUser(user) {
+export async function deleteUser(user_id) {
+    const user = await getUserById(user_id)
     await user.destroy()
 } 
 

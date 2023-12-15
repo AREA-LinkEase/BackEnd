@@ -52,7 +52,8 @@ export async function createAutomate(title, workspace_id, workflow, variables, s
     return newAutomate
 }
 
-export async function deleteAutomate(automate) {
+export async function deleteAutomate(automate_id) {
+    const automate = await getAutomateById(automate_id)
     await automate.destroy()
 }
 
