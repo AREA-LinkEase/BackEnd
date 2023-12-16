@@ -1,12 +1,12 @@
-import { hash } from "bcrypt"
-import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, User } from "../model/users.js"
+import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser, User } from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
+import jwt from "jsonwebtoken"
 
 export default function index(app) {
 
     /**
      * @openapi
-     * /login:
+     * login:
      *   post:
      *     tags:
      *       - users
@@ -28,7 +28,7 @@ export default function index(app) {
      *         description: Missing Field
      *       500:
      *         description: Error
-     * /register:
+     * register:
      *   post:
      *     tags:
      *       - users
@@ -45,14 +45,11 @@ export default function index(app) {
      *                 type: string
      *               email:
      *                 type: string
-     *               services:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
      *     responses:
      *       201:
      *         description: Success
+     *       409:
+     *         description: Username or email already taken
      *       422:
      *         description: Missing field
      *       500:
@@ -78,7 +75,7 @@ export default function index(app) {
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'utilisateur à récupérer
+     *         description: the ID of the user to get
      *     responses:
      *       200:
      *         description: Success
@@ -94,14 +91,32 @@ export default function index(app) {
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'utilisateur à supprimer
+     *         description: the ID of the user to delete
      *     responses:
      *       200:
      *         description: Success
      *       500:
      *         description: Error
      */
+    app.post('/register/', async (request, response) => {
+        let body = request.body
 
+        if (body.username === undefined || body.email === undefined || body.password === undefined)
+            return response.status(422).json({error: "missing field"})
+        try {
+            let hashed_password = await hashPassword(body.password)
+            let json = await createUser(
+                body.username,
+                body.email,
+                hashed_password,
+            )
+            return response.status(201).json({result: "User created successfully"})
+        } catch (error) {
+            if (error.name === "SequelizeUniqueConstraintError") {
+                return response.status(409).json({error: "Username or email is already taken"})
+            }
+        }
+    })
     app.post('/login', async (request, response) => {
         let username = request.body.username
         let plainPassword = request.body.password
@@ -113,9 +128,14 @@ export default function index(app) {
             if (user === undefined || plainPassword === undefined)
                 return response.status(422).json({error: "missing field"})
             let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
-            if (isValidPassword === true)
-                return response.status(200).json({user: user})
+            if (isValidPassword === true) {
+                const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
+                    expiresIn: '2h',
+                });
+                return response.status(200).json({jwt: token})    
+            }
         } catch (error) {
+            console.log(error);
             return response.status(500).json({error: error})
         }
     })
@@ -127,7 +147,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.get('/user/:user_id', async (request, response) => {
+    app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
         try {
@@ -138,7 +158,7 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.post('/user/', async (request, response) => {
+    app.post('/users/', async (request, response) => {
         let body = request.body
 
         if (body.username === undefined || body.email === undefined || body.password === undefined)
@@ -157,7 +177,22 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.delete('/deleteuser/:user_id', async (request, response) => {
+    app.put('/users/:user_id', async (request, response) => {
+        let user_id = request.params.user_id
+        let body = request.body
+
+        if (body.password)
+            body.password = await hashPassword(body.password)
+
+        try {
+            let json = await updateUser(user_id, body)
+            return response.status(200).json({result: "User changed successfully"})
+        } catch(error) {
+            console.log(error);
+            return response.status(500).json({error: error})
+        }
+    })
+    app.delete('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
         try {
