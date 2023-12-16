@@ -1,5 +1,6 @@
 import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace } from "../model/workspaces.js"
 import { getAutomatesByWorkpace } from "../model/automates.js"
+import { getPayload } from "../utils/get_payload.js"
 
 export default function index(app) {
 
@@ -241,18 +242,18 @@ export default function index(app) {
     })
     app.post('/workspaces', async (request, response) => {
         let body = request.body
+        let payload = getPayload(request.headers.token)
 
-        if (body.title === undefined || body.description === undefined || body.is_private === undefined,
-            body.users_id === undefined || body.variables === undefined || body.secrets === undefined)
+        if (body.title === undefined || body.description === undefined || body.is_private === undefined)
             return response.status(422).json({error: "missing field"})
         try {
+            let users_id = JSON.parse('{"ids": [' + payload.id + ']}')
+
             let json = await createWorkspace(
                 body.title,
                 body.description,
                 body.is_private,
-                body.users_id,
-                body.variables,
-                body.secrets
+                users_id
             )
             return response.status(201).json({result: "Workspace created successfully"})
         } catch (error) {

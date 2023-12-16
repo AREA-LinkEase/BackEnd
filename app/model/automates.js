@@ -32,6 +32,12 @@ const Automate = getSequelize().define('Automate', {
     }
 )
 
+Automate.beforeUpdate((automate, options) => {
+    if (automate.changed('workspace_id')) {
+        throw new Error('Workspace ID cannot be updated.');
+    }
+})
+
 export async function getAllAutomates() {
     const automates = await Automate.findAll()
     return automates
@@ -64,6 +70,11 @@ export async function createAutomate(title, workspace_id, workflow, variables, s
         secrets: secrets
     });
     return newAutomate
+}
+
+export async function updateAutomate(id, changes) {
+    const automate = await getAutomateById(id)
+    await automate.update(changes)
 }
 
 export async function deleteAutomate(automate) {
