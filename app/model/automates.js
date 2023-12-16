@@ -7,7 +7,7 @@ const Automate = getSequelize().define('Automate', {
             allowNull: false
         },
         workspace_id: {
-            type: DataTypes.JSON,
+            type: DataTypes.INTEGER,
             allowNull: true
         },
         workflow: {
@@ -21,6 +21,11 @@ const Automate = getSequelize().define('Automate', {
         secrets: {
             type: DataTypes.JSON,
             allowNull: true
+        },
+        enabled: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
         }
     }, {
         timestamps: false,
@@ -45,6 +50,15 @@ export async function getAutomateById(id) {
         }
     })
     return automate
+}
+
+export async function getAutomatesByWorkpace(workspace_id) {
+    const automates = await Automate.findAll({
+        where: {
+            workspace_id: workspace_id
+        }
+    })
+    return automates
 }
 
 export async function createAutomate(title, workspace_id, workflow, variables, secrets) {
