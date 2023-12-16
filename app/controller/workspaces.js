@@ -131,6 +131,24 @@ export default function index(app) {
      *         description: Error
      */
 
+    app.get('/workspaces/private', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(true)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            console.log(error);
+            return response.status(500).json({error: error})
+        }
+    })
+    app.get('/workspaces/public', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(false)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            console.log(error);
+            return response.status(500).json({error: error})
+        }
+    })
     app.get('/workspaces', async (request, response) => {
         try {
             let json = await getAllWorkspaces()
@@ -177,24 +195,6 @@ export default function index(app) {
             let json = await deleteWorkspace(workspace_id)
             return response.status(200).json({result: "Workspace deleted successfully"})
         } catch (error) {
-            console.log(error);
-            return response.status(500).json({error: error})
-        }
-    })
-    app.get('/workspaces/private', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(true)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            console.log(error);
-            return response.status(500).json({error: error})
-        }
-    })
-    app.get('/workspaces/public', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(false)
-            return response.status(200).json({result: json})
-        } catch(error) {
             console.log(error);
             return response.status(500).json({error: error})
         }
