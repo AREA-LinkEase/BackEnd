@@ -6,7 +6,7 @@ export default function index(app) {
 
     /**
      * @openapi
-     * login:
+     * /login:
      *   post:
      *     tags:
      *       - users
@@ -28,7 +28,7 @@ export default function index(app) {
      *         description: Missing Field
      *       500:
      *         description: Error
-     * register:
+     * /register:
      *   post:
      *     tags:
      *       - users
