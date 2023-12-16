@@ -249,7 +249,7 @@ export default function index(app) {
         try {
             let users_id = JSON.parse('{"ids": [' + payload.id + ']}')
 
-            let json = await createWorkspace(
+            await createWorkspace(
                 body.title,
                 body.description,
                 body.is_private,
@@ -265,7 +265,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
 
         try {
-            let json = await deleteWorkspace(workspace_id)
+            await deleteWorkspace(workspace_id)
             return response.status(200).json({result: "Workspace deleted successfully"})
         } catch (error) {
             console.log(error);
@@ -294,7 +294,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let body = request.body
         try {
-            let json = await updateWorkspace(workspace_id, body)
+            await updateWorkspace(workspace_id, body)
             return response.status(200).json({result: "Workspace's name changed successfully"})
         } catch(error) {
             console.log(error);
@@ -305,7 +305,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let enabled = request.params.enabled
         try {
-            let json = await updateWorkspace(workspace_id, { enabled: enabled })
+            await updateWorkspace(workspace_id, { enabled: enabled })
             return response.status(200).json({result: "Workspace's enabled parameter changed successfully"})
         } catch(error) {
             console.log(error);
@@ -327,7 +327,7 @@ export default function index(app) {
         let body = request.body
         try {
             let workspace = await getWorkspaceById(workspace_id)
-            let json = await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
+            await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
             return response.status(200).json({result: "Workspace's variable created successfully"})
         } catch(error) {
             console.log(error);
@@ -340,7 +340,7 @@ export default function index(app) {
         try {
             let workspace = await getWorkspaceById(workspace_id)
             delete workspace.variables[variable_name]
-            let json = await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
+            await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
             return response.status(200).json({result: "Workspace's variable deleted successfully"})
         } catch(error) {
             console.log(error);

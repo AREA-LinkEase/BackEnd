@@ -1,4 +1,4 @@
-import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser, User } from "../model/users.js"
+import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
 
@@ -6,7 +6,7 @@ export default function index(app) {
 
     /**
      * @openapi
-     * login:
+     * /login:
      *   post:
      *     tags:
      *       - users
@@ -28,7 +28,7 @@ export default function index(app) {
      *         description: Missing Field
      *       500:
      *         description: Error
-     * register:
+     * /register:
      *   post:
      *     tags:
      *       - users
@@ -105,7 +105,7 @@ export default function index(app) {
             return response.status(422).json({error: "missing field"})
         try {
             let hashed_password = await hashPassword(body.password)
-            let json = await createUser(
+            await createUser(
                 body.username,
                 body.email,
                 hashed_password,
@@ -165,7 +165,7 @@ export default function index(app) {
             return response.status(422).json({error: "missing field"})
         try {
             let hashed_password = await hashPassword(body.password)
-            let json = await createUser(
+            await createUser(
                 body.username,
                 body.email,
                 hashed_password,
@@ -185,7 +185,7 @@ export default function index(app) {
             body.password = await hashPassword(body.password)
 
         try {
-            let json = await updateUser(user_id, body)
+            await updateUser(user_id, body)
             return response.status(200).json({result: "User changed successfully"})
         } catch(error) {
             console.log(error);
@@ -196,7 +196,7 @@ export default function index(app) {
         let user_id = request.params.user_id
 
         try {
-            let json = await deleteUser(user_id)
+            await deleteUser(user_id)
             return response.status(200).json({result: "User deleted successfully"})
         } catch (error) {
             console.log(error);
