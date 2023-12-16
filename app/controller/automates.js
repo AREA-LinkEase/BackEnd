@@ -177,7 +177,7 @@ export default function index(app) {
         if (workspace === null)
             return response.status(404).json({error: "unknown workspace"})
         try {
-            let json = await createAutomate(
+            await createAutomate(
                 body.title,
                 workspace_id,
                 body.workflow,
@@ -199,7 +199,7 @@ export default function index(app) {
         if (workspace === null)
             return response.status(404).json({error: "unknown workspace"})
         try {
-            let json = await updateAutomate(automate_id, body)
+            await updateAutomate(automate_id, body)
             return response.status(200).json({result: "Automate updated successfully"})
         } catch(error) {
             console.log(error);
@@ -217,7 +217,7 @@ export default function index(app) {
         if (workspace === null)
             return response.statsu(404).json({error: "Unknown workspace"})
         try {
-            let json = await deleteAutomate(automate_id)
+            await deleteAutomate(automate_id)
             return response.status(200).json({result: "Automate deleted successfully"})
         } catch (error) {
             console.log(error);
