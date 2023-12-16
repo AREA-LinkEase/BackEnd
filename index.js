@@ -6,8 +6,12 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { connectDatabase } from './app/getDataBaseConnection.js';
 import { swaggerServe, swaggerSetup } from "./config/swagger.js";
+import { executeAuthMiddleware } from './app/middleware/auth.js';
+import dotenv from 'dotenv';
 
 export const DIR_NAME = dirname(fileURLToPath(import.meta.url));
+
+dotenv.config()
 
 const http = createServer();
 export const io = new Server(http, {
@@ -22,6 +26,8 @@ app.use('/Assets', root.static('Public'))
 app.use(root.urlencoded({extended: true}))
 app.use(root.json())
 app.use('/docs', swaggerServe, swaggerSetup);
+
+executeAuthMiddleware(app)
 
 connectDatabase().then(() => {
     io.on("connection", function (socket) {
@@ -42,5 +48,5 @@ connectDatabase().then(() => {
     })
 })
 
-app.listen(5050)
-http.listen(8000)
+app.listen(process.env.APP_PORT)
+http.listen(process.env.SOCKET_PORT)

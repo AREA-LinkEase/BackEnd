@@ -9,14 +9,15 @@ export function getSequelize() {
 export async function connectDatabase() {
     if (!sequelizeInstance) {
         sequelizeInstance = new Sequelize(
-            'linkease',
-            'admin',
-            '@Password1234',
+            process.env.DB_NAME,
+            process.env.DB_USER,
+            process.env.DB_PASSWORD,
              {
-               host: 'localhost',
-               dialect: 'mysql'
+               host: process.env.HOST,
+               dialect: process.env.DIALECT
              }
-           );
+        )
+        await sequelizeInstance.sync({alter: true})
         try {
             await sequelizeInstance.authenticate()
             console.log('Connexion à la base de données MySQL établie avec succès.')
