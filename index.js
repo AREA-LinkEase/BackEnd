@@ -16,7 +16,7 @@ dotenv.config()
 const http = createServer();
 export const io = new Server(http, {
     cors: {
-      origin: "http://localhost:3001"
+      origin: "http://localhost:8080"
     }
 });
 
@@ -48,5 +48,5 @@ connectDatabase().then(() => {
     })
 })
 
-app.listen(process.env.APP_PORT)
-http.listen(process.env.SOCKET_PORT)
+app.listen((process.env.APP_PORT) ? process.env.APP_PORT : 8080)
+http.listen((process.env.SOCKET_PORT) ? process.env.SOCKET_PORT : 8079)
