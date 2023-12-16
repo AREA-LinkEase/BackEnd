@@ -160,7 +160,7 @@ export default function index(app) {
         try {
             let users_id = JSON.parse('{"ids": [' + payload.id + ']}')
 
-            let json = await createWorkspace(
+            await createWorkspace(
                 body.title,
                 body.description,
                 body.is_private,
@@ -176,7 +176,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
 
         try {
-            let json = await deleteWorkspace(workspace_id)
+            await deleteWorkspace(workspace_id)
             return response.status(200).json({result: "Workspace deleted successfully"})
         } catch (error) {
             console.log(error);
@@ -205,7 +205,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let body = request.body
         try {
-            let json = await updateWorkspace(workspace_id, body)
+            await updateWorkspace(workspace_id, body)
             return response.status(200).json({result: "Automate updated successfully"})
         } catch(error) {
             console.log(error);

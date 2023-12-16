@@ -36,9 +36,7 @@ connectDatabase().then(() => {
             controller.default(socket, "socket")
         })
         socket.on("disconnect", () => {
-            if (socket.token !== undefined)
-                deleteCharacterByToken(socket.token)
-            var i = users.indexOf(socket);
+            let i = users.indexOf(socket);
             users.splice(i, 1);
         })
     });
