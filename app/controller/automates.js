@@ -1,5 +1,58 @@
 import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, updateAutomate } from "../model/automates.js"
 import { getWorkspaceById } from "../model/workspaces.js"
+import {getUserById} from "../model/users.js";
+
+const triggers = []
+const actions = []
+
+setInterval(async () => {
+    let automates = await getAllAutomates()
+
+    for (const automate of automates) {
+        let trigger = automate.dataValues.trigger
+        let triggerOption = automate.dataValues.trigger_option
+        let action = automate.dataValues.action
+        let actionOption = automate.dataValues.action_option
+
+        if (trigger === -1 || !trigger || trigger >= triggers.length) continue;
+        if (action === -1 || !action || action >= actions.length) continue;
+
+
+        let workspace = await getWorkspaceById(automate.dataValues.workspace_id)
+
+        if (!workspace) continue;
+
+        let logs = automate.dataValues.logs;
+        let users_id = workspace.dataValues.users_id;
+
+        for (const user_id of users_id) {
+            let user = await getUserById(user_id);
+
+            if (!user) {
+                logs.push({"type": "warning", "message": "A user doesn't exist"})
+                continue;
+            }
+
+            let services = user.dataValues.services;
+
+            if (!services) {
+                logs.push({"type": "error", "message": "A user doesn't setup services"})
+                continue;
+            }
+
+            try {
+                let triggerResult = await triggers[trigger](triggerOption, services);
+                if (triggerResult) {
+                    let actionResult = await actions[action](actionOption, services);
+                    logs.push({"type": "success", "message": actionResult});
+                }
+            } catch (e) {
+                logs.push({"type": "error", "message": e})
+            }
+        }
+        await automate.update(logs)
+    }
+}, 5000)
 
 export default function index(app) {
 
@@ -99,21 +152,14 @@ export default function index(app) {
      *             properties:
      *               title:
      *                 type: string
-     *               workflow:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
-     *               variables:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
-     *               secrets:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
+     *               trigger:
+     *                 type: int
+     *               trigger_option:
+     *                  type: string
+     *               action:
+     *                  type: int
+     *               action_option:
+     *                  type: string
      *     responses:
      *       200:
      *         description: Success
@@ -199,6 +245,8 @@ export default function index(app) {
         if (workspace === null)
             return response.status(404).json({error: "unknown workspace"})
         try {
+            if (Object.keys(body).every((value) => ["title", "action_option", "action", "trigger", "trigger_option"].includes(value)))
+                response.status(406).json({result: "Method Not Allowed"})
             await updateAutomate(automate_id, body)
             return response.status(200).json({result: "Automate updated successfully"})
         } catch(error) {
