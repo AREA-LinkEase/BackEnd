@@ -47,7 +47,7 @@ const Automate = getSequelize().define('Automate', {
     }
 )
 
-Automate.beforeUpdate((automate, options) => {
+Automate.beforeUpdate((automate) => {
     if (automate.changed('workspace_id')) {
         throw new Error('Workspace ID cannot be updated.');
     }
