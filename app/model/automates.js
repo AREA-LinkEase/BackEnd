@@ -97,12 +97,18 @@ export async function createAutomate(title, workspace_id, workflow, variables, s
 
 export async function updateAutomate(id, changes) {
     const automate = await getAutomateById(id)
+    if (automate === null)
+        return true
     await automate.update(changes)
+    return false
 }
 
 export async function deleteAutomate(automate_id) {
-    const automate = await getAutomateById(automate_id)
+    const automate = await getAutomateById(id)
+    if (automate === null)
+        return true
     await automate.destroy()
+    return false
 }
 
 export { Automate }
