@@ -14,6 +14,8 @@ export default function index(app) {
      *       - services
      *     description:
      *       Connect to a service by id
+     *     security:
+     *       - bearerAuth: []
      *     parameters:
      *       - in: path
      *         name: service_id
