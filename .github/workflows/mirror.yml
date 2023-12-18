@@ -26,6 +26,8 @@ jobs:
 
       - name: move to correct directory
         run: |
+          rm -rf BackEnd || exit 0
+          mkdir BackEnd
           cd ./BackEnd
 
       - name: clone the current repository

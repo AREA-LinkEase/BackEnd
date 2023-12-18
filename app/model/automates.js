@@ -10,6 +10,26 @@ const Automate = getSequelize().define('Automate', {
             type: DataTypes.JSON,
             allowNull: true
         },
+        trigger: {
+            type: DataTypes.INTEGER,
+            defaultValue: -1,
+            allowNull: false
+        },
+        trigger_option: {
+            type: DataTypes.STRING,
+            defaultValue: "",
+            allowNull: false
+        },
+        action: {
+            type: DataTypes.INTEGER,
+            defaultValue: -1,
+            allowNull: false
+        },
+        action_option: {
+            type: DataTypes.STRING,
+            defaultValue: "",
+            allowNull: false
+        },
         workflow: {
             type: DataTypes.JSON,
             allowNull: true
@@ -21,14 +41,37 @@ const Automate = getSequelize().define('Automate', {
         secrets: {
             type: DataTypes.JSON,
             allowNull: true
+        },
+        enabled: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+        },
+        logs: {
+            type: DataTypes.JSON,
+            defaultValue: []
         }
     }, {
         timestamps: false,
     }
 )
 
+Automate.beforeUpdate((automate) => {
+    if (automate.changed('workspace_id')) {
+        throw new Error('Workspace ID cannot be updated.');
+    }
+})
+
 export async function getAllAutomates() {
     const automates = await Automate.findAll()
+    return automates
+}
+
+export async function getAutomatesByWorkpace(workspace_id) {
+    const automates = await Automate.findAll({
+        where: {
+            workspace_id
+        }
+    })
     return automates
 }
 
@@ -50,6 +93,11 @@ export async function createAutomate(title, workspace_id, workflow, variables, s
         secrets: secrets
     });
     return newAutomate
+}
+
+export async function updateAutomate(id, changes) {
+    const automate = await getAutomateById(id)
+    await automate.update(changes)
 }
 
 export async function deleteAutomate(automate_id) {

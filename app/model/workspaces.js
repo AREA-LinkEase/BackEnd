@@ -26,6 +26,11 @@ const Workspace = getSequelize().define('Workspace', {
         secrets: {
             type: DataTypes.JSON,
             allowNull: true
+        },
+        enabled: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
         }
     }, {
         timestamps: false,
@@ -38,6 +43,7 @@ export async function getAllWorkspaces() {
 }
 
 export async function getWorkspaceById(id) {
+    console.log(typeof(id))
     const workspace = await Workspace.findOne({
         where: {
             id: id
@@ -58,6 +64,16 @@ export async function getWorkspaceByPrivacy(bool) {
 export async function updateWorkspace(id, changes) {
     const workspace = await getWorkspaceById(id)
     await workspace.update(changes)
+}
+
+export async function getWorkspaceVariables(id) {
+    const workspace = await Workspace.findOne({
+        where: {
+            id: id
+        },
+        attributes: ["variables"]
+    })
+    return workspace
 }
 
 export async function createWorkspace(title, description, is_private, users_id, variables, secrets) {

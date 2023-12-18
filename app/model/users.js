@@ -4,11 +4,12 @@ import { getSequelize } from '../getDataBaseConnection.js'
 const User = getSequelize().define('User', {
         username: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
         },
         email: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         password: {
             type: DataTypes.STRING,
@@ -63,6 +64,11 @@ export async function createUser(username, email, password, services) {
         services: services
     });
     return newUser
+}
+
+export async function updateUser(id, changes) {
+    const user = await getUserById(id)
+    await user.update(changes)
 }
 
 export async function deleteUser(user_id) {

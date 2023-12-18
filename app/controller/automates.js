@@ -1,4 +1,58 @@
-import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById } from "../model/automates.js"
+import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, updateAutomate } from "../model/automates.js"
+import { getWorkspaceById } from "../model/workspaces.js"
+import {getUserById} from "../model/users.js";
+
+const triggers = []
+const actions = []
+
+setInterval(async () => {
+    let automates = await getAllAutomates()
+
+    for (const automate of automates) {
+        let trigger = automate.dataValues.trigger
+        let triggerOption = automate.dataValues.trigger_option
+        let action = automate.dataValues.action
+        let actionOption = automate.dataValues.action_option
+
+        if (trigger === -1 || !trigger || trigger >= triggers.length) continue;
+        if (action === -1 || !action || action >= actions.length) continue;
+
+
+        let workspace = await getWorkspaceById(automate.dataValues.workspace_id)
+
+        if (!workspace) continue;
+
+        let logs = automate.dataValues.logs;
+        let users_id = workspace.dataValues.users_id;
+
+        for (const user_id of users_id) {
+            let user = await getUserById(user_id);
+
+            if (!user) {
+                logs.push({"type": "warning", "message": "A user doesn't exist"})
+                continue;
+            }
+
+            let services = user.dataValues.services;
+
+            if (!services) {
+                logs.push({"type": "error", "message": "A user doesn't setup services"})
+                continue;
+            }
+
+            try {
+                let triggerResult = await triggers[trigger](triggerOption, services);
+                if (triggerResult) {
+                    let actionResult = await actions[action](actionOption, services);
+                    logs.push({"type": "success", "message": actionResult});
+                }
+            } catch (e) {
+                logs.push({"type": "error", "message": e})
+            }
+        }
+        await automate.update(logs)
+    }
+}, 5000)
 
 export default function index(app) {
 
@@ -50,18 +104,62 @@ export default function index(app) {
      *         description: Missing field
      *       500:
      *         description: Error
-     * /automates/{automate_id}:
+     * /automates/{workspace_id}/{automate_id}:
      *   get:
      *     tags:
      *       - automates
      *     description: Get automate by id
      *     parameters:
      *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
      *         name: automate_id
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'automate à récupérer
+     *         description: the ID of the automate to get
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Error
+     *   put:
+     *     tags:
+     *       - automates
+     *     description: Update automate by ID
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
+     *         name: automate_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the automate to update
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               title:
+     *                 type: string
+     *               trigger:
+     *                 type: int
+     *               trigger_option:
+     *                  type: string
+     *               action:
+     *                  type: int
+     *               action_option:
+     *                  type: string
      *     responses:
      *       200:
      *         description: Success
@@ -73,11 +171,17 @@ export default function index(app) {
      *     description: Delete automate by id
      *     parameters:
      *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *       - in: path
      *         name: automate_id
      *         required: true
      *         schema:
      *           type: integer
-     *         description: ID de l'automate à supprimer
+     *         description: the ID of the automate to delete
      *     responses:
      *       200:
      *         description: Success
@@ -93,9 +197,13 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.get('/automates/:automate_id', async (request, response) => {
+    app.get('/automates/:workspace_id/:automate_id', async (request, response) => {
         let automate_id = request.params.automate_id
+        let workspace_id = request.params.workspace_id
 
+        let workspace = await getWorkspaceById(workspace_id)
+        if (workspace === null)
+            return response.status(404).json({error: "Unkwnown workspace"})
         try {
             let json = await getAutomateById(automate_id)
             return response.status(200).json({result: json})
@@ -104,16 +212,20 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.post('/automates', async (request, response) => {
+    app.post('/automates/:workspace_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
         let body = request.body
 
         if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined,
             body.variables === undefined || body.secrets === undefined)
             return response.status(422).json({error: "missing field"})
+        let workspace = await getWorkspaceById(workspace_id)
+        if (workspace === null)
+            return response.status(404).json({error: "unknown workspace"})
         try {
-            let json = await createAutomate(
+            await createAutomate(
                 body.title,
-                body.workspace_id,
+                workspace_id,
                 body.workflow,
                 body.variables,
                 body.secrets
@@ -124,11 +236,36 @@ export default function index(app) {
             return response.status(500).json({error: error})
         }
     })
-    app.delete('/automates/:automate_id', async (request, response) => {
+    app.put('/automates/:workspace_id/:automate_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
         let automate_id = request.params.automate_id
-
+        let body = request.body
+    
+        let workspace = await getWorkspaceById(workspace_id)
+        if (workspace === null)
+            return response.status(404).json({error: "unknown workspace"})
         try {
-            let json = await deleteAutomate(automate_id)
+            if (Object.keys(body).every((value) => ["title", "action_option", "action", "trigger", "trigger_option"].includes(value)))
+                response.status(406).json({result: "Method Not Allowed"})
+            await updateAutomate(automate_id, body)
+            return response.status(200).json({result: "Automate updated successfully"})
+        } catch(error) {
+            console.log(error);
+            //TODO faire une erreur custom
+            // if (error === "Workspace ID cannot be updated.")
+            //     return response.status(222).json({error: "workspace_id can't be updated"})
+            return response.status(500).json({error: error})
+        }
+    })
+    app.delete('/automates/:workspace_id/:automate_id', async (request, response) => {
+        let automate_id = request.params.automate_id
+        let workspace_id = request.params.workspace_id
+
+        let workspace = getWorkspaceById(workspace_id)
+        if (workspace === null)
+            return response.statsu(404).json({error: "Unknown workspace"})
+        try {
+            await deleteAutomate(automate_id)
             return response.status(200).json({result: "Automate deleted successfully"})
         } catch (error) {
             console.log(error);
