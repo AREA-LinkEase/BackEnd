@@ -21,7 +21,7 @@ export async function verifyToken(request, response, next) {
 }
 
 export function executeAuthMiddleware(app) {
-    // app.use('/users/', verifyToken)
-    // app.use('/workspaces/', verifyToken)
-    // app.use('/automates/', verifyToken)
+    app.use('/users/', verifyToken)
+    app.use('/workspaces/', verifyToken)
+    app.use('/automates/', verifyToken)
 }
