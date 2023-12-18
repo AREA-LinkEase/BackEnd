@@ -2,7 +2,7 @@ import { DataTypes } from 'sequelize'
 import { getSequelize } from '../getDataBaseConnection.js'
 import {Automate} from "./automates.js";
 
-const Services = getSequelize().define('Services', {
+const Services = getSequelize().define('Service', {
         name: {
             type: DataTypes.STRING,
             allowNull: false
