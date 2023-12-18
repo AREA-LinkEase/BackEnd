@@ -16,7 +16,7 @@ export default function index(app) {
      *       200:
      *         description: Success
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      *   post:
      *     tags:
      *       - workspaces
@@ -52,9 +52,9 @@ export default function index(app) {
      *       201:
      *         description: Success
      *       422:
-     *         description: Missing field
+     *         description: Unprocessable Entity
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/{workspace_id}:
      *   get:
      *     tags:
@@ -70,8 +70,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      *   put:
      *     tags:
      *       - workspaces
@@ -94,8 +96,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      *   delete:
      *     tags:
      *       - workspaces
@@ -110,8 +114,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/private:
      *   get:
      *     tags:
@@ -121,7 +127,7 @@ export default function index(app) {
      *       200:
      *         description: Success
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/public:
      *   get:
      *     tags:
@@ -131,7 +137,7 @@ export default function index(app) {
      *       200:
      *         description: Success
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/{workspace_id}/enable/{enabled}:
      *   get:
      *     tags:
@@ -153,8 +159,12 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
+     *       422:
+     *         description: Unprocessable entity
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/{workspace_id}/variables:
      *   get:
      *     tags:
@@ -170,8 +180,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      *   post:
      *     tags:
      *       - workspaces
@@ -194,8 +206,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /workspaces/{workspace_id}/variables/{variable_name}:
      *   delete:
      *     tags:
@@ -217,8 +231,12 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Workspace not found
+     *       422:
+     *         description: Unprocessable entity
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      */
 
     app.get('/workspaces/private', async (request, response) => {
@@ -226,7 +244,6 @@ export default function index(app) {
             let json = await getWorkspaceByPrivacy(true)
             return response.status(200).json({result: json})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -235,7 +252,6 @@ export default function index(app) {
             let json = await getWorkspaceByPrivacy(false)
             return response.status(200).json({result: json})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -253,11 +269,10 @@ export default function index(app) {
         try {
             let automates = await getAutomatesByWorkpace(workspace_id)
             let json = await getWorkspaceById(workspace_id)
-            if (automates === null || json === null)
+            if (json === null)
                 return NotFound(response)
             return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -278,7 +293,6 @@ export default function index(app) {
             )
             return response.status(201).json({result: "Workspace created successfully"})
         } catch (error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -286,10 +300,11 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
 
         try {
-            await deleteWorkspace(workspace_id)
+            const error = await deleteWorkspace(workspace_id)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "Workspace deleted successfully"})
         } catch (error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -297,10 +312,11 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let body = request.body
         try {
-            await updateWorkspace(workspace_id, body)
+            const error = await updateWorkspace(workspace_id, body)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "Workspace's name changed successfully"})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -308,10 +324,13 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let enabled = request.params.enabled
         try {
-            await updateWorkspace(workspace_id, { enabled: enabled })
+            if (enabled != "true" && enabled != "false")
+                return UnprocessableEntity(response)
+            const error = await updateWorkspace(workspace_id, { enabled: enabled })
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "Workspace's enabled parameter changed successfully"})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -319,9 +338,10 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         try {
             let json = await getWorkspaceVariables(workspace_id)
+            if (json === null)
+                return NotFound(response)
             return response.status(200).json({result: json.variables})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -330,10 +350,11 @@ export default function index(app) {
         let body = request.body
         try {
             let workspace = await getWorkspaceById(workspace_id)
+            if (workspace === null)
+                return NotFound(response)
             await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
             return response.status(200).json({result: "Workspace's variable created successfully"})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
@@ -342,11 +363,14 @@ export default function index(app) {
         let variable_name = request.params.variable_name
         try {
             let workspace = await getWorkspaceById(workspace_id)
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.variables === null || workspace.variables[variable_name])
+                return NotFound(response)
             delete workspace.variables[variable_name]
             await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
             return response.status(200).json({result: "Workspace's variable deleted successfully"})
         } catch(error) {
-            console.log(error);
             InternalError(response)
         }
     })
