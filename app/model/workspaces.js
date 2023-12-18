@@ -88,7 +88,8 @@ export async function createWorkspace(title, description, is_private, users_id, 
     return newWorkspace
 }
 
-export async function deleteWorkspace(workspace) {
+export async function deleteWorkspace(workspace_id) {
+    const workspace = await getWorkspaceById(workspace_id)
     await workspace.destroy()
 }
 
