@@ -123,9 +123,9 @@ export default function index(app) {
 
         try {
             let user = await getUserByUsername(username)
-            if (user === undefined)
+            if (user === null)
                 user = await getUserByEmail(username)
-            if (user === undefined || plainPassword === undefined)
+            if (user === null || plainPassword === undefined)
                 return response.status(422).json({error: "missing field"})
             let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
             if (isValidPassword === true) {
