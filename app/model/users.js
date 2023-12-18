@@ -71,7 +71,8 @@ export async function updateUser(id, changes) {
     await user.update(changes)
 }
 
-export async function deleteUser(user) {
+export async function deleteUser(user_id) {
+    const user = await getUserById(user_id)
     await user.destroy()
 } 
 
