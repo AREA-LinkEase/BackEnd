@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize'
 
-
 let sequelizeInstance = null;
 
 export function getSequelize() {
