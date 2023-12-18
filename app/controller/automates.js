@@ -1,6 +1,7 @@
 import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, updateAutomate } from "../model/automates.js"
 import { getWorkspaceById } from "../model/workspaces.js"
 import {getUserById} from "../model/users.js";
+import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
 
 const triggers = []
 const actions = []
@@ -100,6 +101,8 @@ export default function index(app) {
      *     responses:
      *       201:
      *         description: Success
+     *       404:
+     *         description: Unknown workspace_id
      *       422:
      *         description: Missing field
      *       500:
@@ -125,6 +128,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Unknown workspace_id or automate_id
      *       500:
      *         description: Error
      *   put:
@@ -163,6 +168,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Unknown workspace_id or automate_id
+     *       406:
+     *         description: Method not allowed
      *       500:
      *         description: Error
      *   delete:
@@ -185,6 +194,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Unknown workspace_id or automate_id
      *       500:
      *         description: Error
      */
@@ -194,7 +205,7 @@ export default function index(app) {
             let json = await getAllAutomates()
             return response.status(200).json({result: json})
         } catch(error) {
-            return response.status(500).json({error: error})
+            return InternalError(response)
         }
     })
     app.get('/automates/:workspace_id/:automate_id', async (request, response) => {
@@ -203,13 +214,14 @@ export default function index(app) {
 
         let workspace = await getWorkspaceById(workspace_id)
         if (workspace === null)
-            return response.status(404).json({error: "Unkwnown workspace"})
+            return NotFound(response)
         try {
             let json = await getAutomateById(automate_id)
+            if (json === null)
+                return NotFound(response)
             return response.status(200).json({result: json})
         } catch(error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
     app.post('/automates/:workspace_id', async (request, response) => {
@@ -218,10 +230,10 @@ export default function index(app) {
 
         if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined,
             body.variables === undefined || body.secrets === undefined)
-            return response.status(422).json({error: "missing field"})
+            return UnprocessableEntity(response)
         let workspace = await getWorkspaceById(workspace_id)
         if (workspace === null)
-            return response.status(404).json({error: "unknown workspace"})
+            return NotFound(response)
         try {
             await createAutomate(
                 body.title,
@@ -232,8 +244,7 @@ export default function index(app) {
             )
             return response.status(201).json({result: "Automate created successfully"})
         } catch (error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
     app.put('/automates/:workspace_id/:automate_id', async (request, response) => {
@@ -243,18 +254,16 @@ export default function index(app) {
     
         let workspace = await getWorkspaceById(workspace_id)
         if (workspace === null)
-            return response.status(404).json({error: "unknown workspace"})
+            return NotFound(response)
         try {
             if (Object.keys(body).every((value) => ["title", "action_option", "action", "trigger", "trigger_option"].includes(value)))
                 response.status(406).json({result: "Method Not Allowed"})
-            await updateAutomate(automate_id, body)
+            let error = await updateAutomate(automate_id, body)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "Automate updated successfully"})
         } catch(error) {
-            console.log(error);
-            //TODO faire une erreur custom
-            // if (error === "Workspace ID cannot be updated.")
-            //     return response.status(222).json({error: "workspace_id can't be updated"})
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
     app.delete('/automates/:workspace_id/:automate_id', async (request, response) => {
@@ -263,13 +272,14 @@ export default function index(app) {
 
         let workspace = getWorkspaceById(workspace_id)
         if (workspace === null)
-            return response.statsu(404).json({error: "Unknown workspace"})
+            return NotFound(response)
         try {
-            await deleteAutomate(automate_id)
+            let error = await deleteAutomate(automate_id)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "Automate deleted successfully"})
         } catch (error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
 }
