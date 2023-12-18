@@ -64,6 +64,8 @@ export default function index(app) {
      *     tags:
      *       - automates
      *     description: Get all automates
+     *     security:
+     *       - bearerAuth: []
      *     responses:
      *       200:
      *         description: Success
@@ -73,6 +75,8 @@ export default function index(app) {
      *     tags:
      *       - automates
      *     description: Create a new automate
+     *     security:
+     *       - bearerAuth: []
      *     requestBody:
      *       content:
      *         application/json:
@@ -112,6 +116,8 @@ export default function index(app) {
      *     tags:
      *       - automates
      *     description: Get automate by id
+     *     security:
+     *       - bearerAuth: []
      *     parameters:
      *       - in: path
      *         name: workspace_id
@@ -136,6 +142,8 @@ export default function index(app) {
      *     tags:
      *       - automates
      *     description: Update automate by ID
+     *     security:
+     *       - bearerAuth: []
      *     parameters:
      *       - in: path
      *         name: workspace_id
@@ -178,6 +186,8 @@ export default function index(app) {
      *     tags:
      *       - automates
      *     description: Delete automate by id
+     *     security:
+     *       - bearerAuth: []
      *     parameters:
      *       - in: path
      *         name: workspace_id

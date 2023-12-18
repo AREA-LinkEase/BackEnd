@@ -11,6 +11,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Get all workspaces
      *     responses:
      *       200:
@@ -20,6 +22,8 @@ export default function index(app) {
      *   post:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Create a new workspace
      *     requestBody:
      *       content:
@@ -59,6 +63,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Get workspace by id
      *     parameters:
      *       - in: path
@@ -77,6 +83,8 @@ export default function index(app) {
      *   put:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Modify workspace's name by id
      *     parameters:
      *       - in: path
@@ -103,6 +111,8 @@ export default function index(app) {
      *   delete:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Delete workspace by id
      *     parameters:
      *       - in: path
@@ -122,6 +132,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Get all private workspaces
      *     responses:
      *       200:
@@ -132,6 +144,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Get all public workspaces
      *     responses:
      *       200:
@@ -142,6 +156,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Set workspace's enable parameter by workspace id
      *     parameters:
      *       - in: path
@@ -169,6 +185,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Get workspace's variables by workspace id
      *     parameters:
      *       - in: path
@@ -187,6 +205,8 @@ export default function index(app) {
      *   post:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Create or modify variable in workspace
      *     parameters:
      *       - in: path
@@ -214,6 +234,8 @@ export default function index(app) {
      *   delete:
      *     tags:
      *       - workspaces
+     *     security:
+     *       - bearerAuth: []
      *     description: Delete variable in workspace
      *     parameters:
      *       - in: path
