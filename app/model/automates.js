@@ -15,7 +15,7 @@ const Automate = getSequelize().define('Automate', {
             defaultValue: -1,
             allowNull: false
         },
-        trigger_options: {
+        trigger_option: {
             type: DataTypes.STRING,
             defaultValue: "",
             allowNull: false
@@ -25,7 +25,7 @@ const Automate = getSequelize().define('Automate', {
             defaultValue: -1,
             allowNull: false
         },
-        action_options: {
+        action_option: {
             type: DataTypes.STRING,
             defaultValue: "",
             allowNull: false
@@ -41,6 +41,14 @@ const Automate = getSequelize().define('Automate', {
         secrets: {
             type: DataTypes.JSON,
             allowNull: true
+        },
+        enabled: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+        },
+        logs: {
+            type: DataTypes.JSON,
+            defaultValue: []
         }
     }, {
         timestamps: false,
@@ -55,6 +63,15 @@ Automate.beforeUpdate((automate) => {
 
 export async function getAllAutomates() {
     const automates = await Automate.findAll()
+    return automates
+}
+
+export async function getAutomatesByWorkpace(workspace_id) {
+    const automates = await Automate.findAll({
+        where: {
+            workspace_id
+        }
+    })
     return automates
 }
 
