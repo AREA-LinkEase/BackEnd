@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize'
+import {hashPassword} from "./utils/hash_password.js";
 
 let sequelizeInstance = null;
 
@@ -6,8 +7,25 @@ export function getSequelize() {
     return sequelizeInstance;
 }
 
-async function feedDatabase() {
-
+async function feedDatabase(User, Automate, Workspace) {
+    // Create User
+    User.destroy({
+        where: {},
+        truncate: true
+    })
+    Automate.destroy({
+        where: {},
+        truncate: true
+    })
+    Workspace.destroy({
+        where: {},
+        truncate: true
+    })
+    User.create({
+        password: await hashPassword("test"),
+        email: "test@etest.com",
+        username: "test"
+    })
 }
 
 export async function connectDatabase(isTest = false) {
@@ -16,6 +34,7 @@ export async function connectDatabase(isTest = false) {
             sequelizeInstance = new Sequelize({
                 dialect: 'sqlite',
                 storage: ((isTest) ? './test.sqlite' : './app.sqlite'),
+                logging: false
             })
         } else {
             sequelizeInstance = new Sequelize(
@@ -28,7 +47,11 @@ export async function connectDatabase(isTest = false) {
                 }
             )
         }
-        await sequelizeInstance.sync()
+        if (isTest) {
+            await sequelizeInstance.sync({ force: true });
+        } else {
+            await sequelizeInstance.sync()
+        }
         let { User } = await import("./model/users.js");
         let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")
@@ -43,7 +66,7 @@ export async function connectDatabase(isTest = false) {
             throw new Error('Connexion à la base de données échouée')
         }
         if (isTest)
-            await feedDatabase();
+            await feedDatabase(User, Automate, Workspace);
     }
     return sequelizeInstance
 }
