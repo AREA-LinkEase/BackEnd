@@ -1,14 +1,38 @@
 import {getServicesById} from "../model/services.js";
 import {getUserById, updateUser} from "../model/users.js";
+import { BadRequest, NotFound } from "../utils/request_error.js";
 
 const REDIRECT_URI = "http://135.181.165.228:8080/services/callback"
 
 export default function index(app) {
+
+    /**
+     * @openapi
+     * /services/connect/${id_service}:
+     *   get:
+     *     tags:
+     *       - services
+     *     description:
+     *       Connect to a service by id
+     *     parameters:
+     *       - in: path
+     *         name: service_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: Service's ID to get
+     *     responses:
+     *       308:
+     *         description: Redirect
+     *       404:
+     *         description: Service not found
+     */
+
     app.get('/services/connect/:id_service', async (request, response) => {
         let id_service = request.params.id_service;
         let service = await getServicesById(id_service)
 
-        if (!service) return response.status(404).json({error: "Service Not Found"})
+        if (!service) return NotFound(response)
         response.redirect(
             service.dataValues.auth_url + "?client_id=" +
             service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
@@ -21,9 +45,9 @@ export default function index(app) {
         let id_service = request.query.state;
         let service = await getServicesById(id_service)
 
-        if (!service) return response.status(404).json({error: "Service Not Found"})
-        if (code === undefined) return response.status(400).json({"error": 1})
-        if (id_service === undefined) return response.status(400).json({"error": 1})
+        if (!service) return NotFound(response)
+        if (code === undefined) return BadRequest(response)
+        if (id_service === undefined) return BadRequest(response)
         const query = new URLSearchParams();
         query.append('client_id', service.dataValues.client_id);
         query.append('client_secret', service.dataValues.client_secret);

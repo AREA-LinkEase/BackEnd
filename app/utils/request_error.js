@@ -11,6 +11,7 @@ class RequestError extends Function {
     }
 }
 
+export const BadRequest = new RequestError(400, "Bad Request")
 export const Unauthorized = new RequestError(401, "Unauthorized")
 export const Forbidden = new RequestError(403, "Forbidden")
 export const NotFound = new RequestError(404, "Not Found")
