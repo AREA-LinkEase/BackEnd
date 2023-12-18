@@ -1,3 +1,4 @@
+import { getUserById } from "../model/users.js"
 import { getPayload } from "../utils/get_payload.js";
 
 export async function verifyToken(request, response, next) {
@@ -7,9 +8,11 @@ export async function verifyToken(request, response, next) {
 
     try {
         const payload = getPayload(token)
+        const user = await getUserById(payload.id)
         if (Date.now() >= payload.exp * 1000) {
             return false;
         }
+        response.locals.user = user
     } catch (e) {
         return response.status(403).json({"error": "Unauthorized"})
     }

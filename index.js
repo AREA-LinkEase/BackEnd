@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { connectDatabase } from './app/getDataBaseConnection.js';
 import { swaggerServe, swaggerSetup } from "./config/swagger.js";
-import { executeAuthMiddleware } from './app/middleware/auth.js';
 import dotenv from 'dotenv';
 
 export const DIR_NAME = dirname(fileURLToPath(import.meta.url));
@@ -27,9 +26,11 @@ app.use(root.urlencoded({extended: true}))
 app.use(root.json())
 app.use('/docs', swaggerServe, swaggerSetup);
 
-executeAuthMiddleware(app)
 
 connectDatabase().then(() => {
+    import('./app/middleware/auth.js').then(({ executeAuthMiddleware }) => {
+        executeAuthMiddleware(app)
+    });
     io.on("connection", function (socket) {
         users.push(socket)
         import('./core/controller/controller.js').then((controller) => {
