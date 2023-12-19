@@ -148,7 +148,7 @@ export default function index(app) {
      *       500:
      *         description: Internal Server Error
      */
-    app.post('/register/', async (request, response) => {
+    app.post('/register', async (request, response) => {
         let body = request.body
 
         if (body.username === undefined || body.email === undefined || body.password === undefined)
@@ -178,24 +178,17 @@ export default function index(app) {
             let user = await getUserByUsername(username)
             if (user === null)
                 user = await getUserByEmail(username)
-            if (user === null || plainPassword === undefined)
-                return Unauthorized(response)
+            if (user === null)
+                return NotFound(response)
             let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
             if (isValidPassword === true) {
                 const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
                     expiresIn: '2h',
                 });
                 return response.status(200).json({jwt: "Bearer " + token})
-            }
+            } else
+                return Unauthorized(response)
         } catch (error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users', async (request, response) => {
-        try {
-            let json = await getAllUsers()
-            return response.status(200).json({result: json})
-        } catch(error) {
             InternalError(response)
         }
     })
@@ -209,6 +202,14 @@ export default function index(app) {
             let json = await getUserById(user_id)
             if (json === null)
                 return NotFound(response)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/users', async (request, response) => {
+        try {
+            let json = await getAllUsers()
             return response.status(200).json({result: json})
         } catch(error) {
             InternalError(response)
