@@ -1,8 +1,8 @@
 import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
-import { InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
-import { getPayload } from '../utils/get_payload.js'
+import { Forbidden, InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
+import { getPayload } from "../utils/get_payload.js"
 
 export default function index(app) {
 
@@ -62,6 +62,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - users
+     *     security:
+     *       - bearerAuth: []
      *     description: Get all users
      *     responses:
      *       200:
@@ -72,6 +74,8 @@ export default function index(app) {
      *   get:
      *     tags:
      *       - users
+     *     security:
+     *       - bearerAuth: []
      *     description: Get user by id
      *     parameters:
      *       - in: path
@@ -87,9 +91,47 @@ export default function index(app) {
      *         description: Unknown user
      *       500:
      *         description: Internal Server Error
+     *   put:
+     *     tags:
+     *       - users
+     *     security:
+     *       - bearerAuth: []
+     *     description: Update user by ID
+     *     parameters:
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the user to update
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               username:
+     *                 type: string
+     *               password:
+     *                 type: string
+     *               email:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: Success
+     *       403:
+     *         description: Forbidden Request
+     *       404:
+     *         description: Unknown workspace_id or automate_id
+     *       422:
+     *         description: Unprocessable Entity
+     *       500:
+     *         description: Error
      *   delete:
      *     tags:
      *       - users
+     *     security:
+     *       - bearerAuth: []
      *     description: Delete user by id
      *     parameters:
      *       - in: path
@@ -143,7 +185,7 @@ export default function index(app) {
                 const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
                     expiresIn: '2h',
                 });
-                return response.status(200).json({jwt: token})    
+                return response.status(200).json({jwt: "Bearer " + token})
             } else
                 return Unauthorized(response)
         } catch (error) {
@@ -152,7 +194,10 @@ export default function index(app) {
     })
     app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
+        let payload = getPayload(request.headers.authorization)
 
+        if (user_id !== payload.id)
+            return Forbidden(response)
         try {
             let json = await getUserById(user_id)
             if (json === null)
@@ -183,11 +228,14 @@ export default function index(app) {
         }
     })
     app.put('/users/:user_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let user_id = request.params.user_id
         let body = request.body
 
         if (user_id === undefined || body === undefined)
             return UnprocessableEntity(response)
+        if (user_id !== payload.id)
+            return Forbidden(response)
         if (body.password)
             body.password = await hashPassword(body.password)
         try {
@@ -201,7 +249,10 @@ export default function index(app) {
     })
     app.delete('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
+        let payload = getPayload(request.headers.authorization)
 
+        if (user_id !== payload.id)
+            return Forbidden(response)
         try {
             let error = await deleteUser(user_id)
             if (error)
