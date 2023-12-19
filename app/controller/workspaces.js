@@ -261,39 +261,15 @@ export default function index(app) {
      *         description: Internal Server Error
      */
 
-    app.get('/workspaces/private', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(true)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/public', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(false)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces', async (request, response) => {
-        try {
-            let json = await getAllWorkspaces()
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/:workspace_id', async (request, response) => {
+    app.post('/workspaces/:workspace_id/variables', async (request, response) => {
         let workspace_id = request.params.workspace_id
-
+        let body = request.body
         try {
-            let automates = await getAutomatesByWorkpace(workspace_id)
-            let json = await getWorkspaceById(workspace_id)
-            if (json === null)
+            let workspace = await getWorkspaceById(workspace_id)
+            if (workspace === null)
                 return NotFound(response)
-            return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
+            await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
+            return response.status(200).json({result: "Workspace's variable created successfully"})
         } catch(error) {
             InternalError(response)
         }
@@ -315,30 +291,6 @@ export default function index(app) {
             )
             return response.status(201).json({result: "Workspace created successfully"})
         } catch (error) {
-            InternalError(response)
-        }
-    })
-    app.delete('/workspaces/:workspace_id', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-
-        try {
-            const error = await deleteWorkspace(workspace_id)
-            if (error)
-                return NotFound(response)
-            return response.status(200).json({result: "Workspace deleted successfully"})
-        } catch (error) {
-            InternalError(response)
-        }
-    })
-    app.put('/workspaces/:workspace_id', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-        let body = request.body
-        try {
-            const error = await updateWorkspace(workspace_id, body)
-            if (error)
-                return NotFound(response)
-            return response.status(200).json({result: "Workspace's name changed successfully"})
-        } catch(error) {
             InternalError(response)
         }
     })
@@ -367,15 +319,51 @@ export default function index(app) {
             InternalError(response)
         }
     })
-    app.post('/workspaces/:workspace_id/variables', async (request, response) => {
+    app.get('/workspaces/:workspace_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
+
+        try {
+            let automates = await getAutomatesByWorkpace(workspace_id)
+            let json = await getWorkspaceById(workspace_id)
+            if (json === null)
+                return NotFound(response)
+            return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/private', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(true)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/public', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(false)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces', async (request, response) => {
+        try {
+            let json = await getAllWorkspaces()
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.put('/workspaces/:workspace_id', async (request, response) => {
         let workspace_id = request.params.workspace_id
         let body = request.body
         try {
-            let workspace = await getWorkspaceById(workspace_id)
-            if (workspace === null)
+            const error = await updateWorkspace(workspace_id, body)
+            if (error)
                 return NotFound(response)
-            await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
-            return response.status(200).json({result: "Workspace's variable created successfully"})
+            return response.status(200).json({result: "Workspace's name changed successfully"})
         } catch(error) {
             InternalError(response)
         }
@@ -393,6 +381,18 @@ export default function index(app) {
             await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
             return response.status(200).json({result: "Workspace's variable deleted successfully"})
         } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.delete('/workspaces/:workspace_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
+
+        try {
+            const error = await deleteWorkspace(workspace_id)
+            if (error)
+                return NotFound(response)
+            return response.status(200).json({result: "Workspace deleted successfully"})
+        } catch (error) {
             InternalError(response)
         }
     })
