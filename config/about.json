@@ -1,0 +1,39 @@
+{
+    "client": {
+        "host": "10.101.53.35"
+    },
+    "server": {
+        "current_time": 0,
+        "services": [{
+            "name": "spotify",
+            "actions": [{
+                "name": "on_listen",
+                "description": "The music is playing"
+            }],
+            "reactions": [{
+                "name": "start_music",
+                "description": "The music is played"
+            },{
+                "name": "add_music_to_queue",
+                "description": "Add a music into the queue"
+            }]
+            
+        },{
+            "name": "discord",
+            "actions": [{
+                "name": "on_message",
+                "description": "When a message is triggered"
+            },{
+                "name": "on_reaction",
+                "description": "When a reaction is triggered"
+            }],
+            "reactions": [{
+                "name": "create_message",
+                "description": "Send a message"
+            },{
+                "name": "create_reaction",
+                "description": "Send a reaction"
+            }]
+        }]
+    }
+}
