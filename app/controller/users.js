@@ -2,6 +2,7 @@ import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUs
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
 import { InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
+import { getPayload } from '../utils/get_payload.js'
 
 export default function index(app) {
 
@@ -158,6 +159,18 @@ export default function index(app) {
                 return NotFound(response)
             return response.status(200).json({result: json})
         } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/users/user', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+
+        try {
+            const json = await getUserById(payload.id)
+            if (json === null)
+                return NotFound(response)
+            return response.status(200).json({result: json})
+        } catch (error) {
             InternalError(response)
         }
     })
