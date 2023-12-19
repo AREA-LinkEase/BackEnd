@@ -68,12 +68,18 @@ export async function createUser(username, email, password, services) {
 
 export async function updateUser(id, changes) {
     const user = await getUserById(id)
+    if (user === null)
+        return true
     await user.update(changes)
+    return false
 }
 
 export async function deleteUser(user_id) {
     const user = await getUserById(user_id)
+    if (user === null)
+        return true
     await user.destroy()
+    return false
 } 
 
 export { User }

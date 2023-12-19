@@ -55,9 +55,11 @@ export async function connectDatabase(isTest = false) {
         let { User } = await import("./model/users.js");
         let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")
+        let { Services } = await import("./model/services.js")
         await User.sync({alter: true})
         await Automate.sync({alter: true})
         await Workspace.sync({alter: true})
+        await Services.sync({alter: true})
         try {
             await sequelizeInstance.authenticate()
             console.log('Connexion à la base de données SQL établie avec succès.')

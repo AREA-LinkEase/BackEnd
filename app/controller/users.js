@@ -1,6 +1,7 @@
 import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
+import { InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
 
 export default function index(app) {
 
@@ -24,10 +25,12 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       401:
+     *         description: Unauthorized
      *       422:
-     *         description: Missing Field
+     *         description: Unprocessable Entity
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /register:
      *   post:
      *     tags:
@@ -51,9 +54,9 @@ export default function index(app) {
      *       409:
      *         description: Username or email already taken
      *       422:
-     *         description: Missing field
+     *         description: Unprocessable Entity
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /users:
      *   get:
      *     tags:
@@ -63,7 +66,7 @@ export default function index(app) {
      *       200:
      *         description: Success
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      * /users/{user_id}:
      *   get:
      *     tags:
@@ -79,8 +82,10 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Unknown user
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      *   delete:
      *     tags:
      *       - users
@@ -95,14 +100,16 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       404:
+     *         description: Unknown user
      *       500:
-     *         description: Error
+     *         description: Internal Server Error
      */
-    app.post('/register/', async (request, response) => {
+    app.post('/register', async (request, response) => {
         let body = request.body
 
         if (body.username === undefined || body.email === undefined || body.password === undefined)
-            return response.status(422).json({error: "missing field"})
+            return UnprocessableEntity(response)
         try {
             let hashed_password = await hashPassword(body.password)
             await createUser(
@@ -115,18 +122,21 @@ export default function index(app) {
             if (error.name === "SequelizeUniqueConstraintError") {
                 return response.status(409).json({error: "Username or email is already taken"})
             }
+            InternalError(response)
         }
     })
     app.post('/login', async (request, response) => {
         let username = request.body.username
         let plainPassword = request.body.password
 
+        if (username === undefined || plainPassword === undefined)
+            return UnprocessableEntity(response)
         try {
             let user = await getUserByUsername(username)
             if (user === null)
                 user = await getUserByEmail(username)
             if (user === null || plainPassword === undefined)
-                return response.status(422).json({error: "missing field"})
+                return Unauthorized(response)
             let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
             if (isValidPassword === true) {
                 const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
@@ -135,16 +145,7 @@ export default function index(app) {
                 return response.status(200).json({jwt: token})    
             }
         } catch (error) {
-            console.log(error);
-            return response.status(500).json({error: error})
-        }
-    })
-    app.get('/users', async (request, response) => {
-        try {
-            let json = await getAllUsers()
-            return response.status(200).json({result: json})
-        } catch(error) {
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
     app.get('/users/:user_id', async (request, response) => {
@@ -152,55 +153,49 @@ export default function index(app) {
 
         try {
             let json = await getUserById(user_id)
+            if (json === null)
+                return NotFound(response)
             return response.status(200).json({result: json})
         } catch(error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
-    app.post('/users/', async (request, response) => {
-        let body = request.body
-
-        if (body.username === undefined || body.email === undefined || body.password === undefined)
-            return response.status(422).json({error: "missing field"})
+    app.get('/users', async (request, response) => {
         try {
-            let hashed_password = await hashPassword(body.password)
-            await createUser(
-                body.username,
-                body.email,
-                hashed_password,
-                body.services
-            )
-            return response.status(201).json({result: "User created successfully"})
-        } catch (error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            let json = await getAllUsers()
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
         }
     })
     app.put('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
         let body = request.body
 
+        if (user_id === undefined || body === undefined)
+            return UnprocessableEntity(response)
         if (body.password)
             body.password = await hashPassword(body.password)
-
         try {
-            await updateUser(user_id, body)
+            let error = await updateUser(user_id, body)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "User changed successfully"})
         } catch(error) {
-            console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
     app.delete('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
         try {
-            await deleteUser(user_id)
+            let error = await deleteUser(user_id)
+            if (error)
+                return NotFound(response)
             return response.status(200).json({result: "User deleted successfully"})
         } catch (error) {
             console.log(error);
-            return response.status(500).json({error: error})
+            InternalError(response)
         }
     })
 }

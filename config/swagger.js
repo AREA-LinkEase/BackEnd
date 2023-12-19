@@ -14,6 +14,15 @@ const options = {
         url: "http://localhost:8080",
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT', // ou le format approprié de votre jeton
+        },
+      },
+    }
   },
   apis: ['./app/controller/*.js'], // Chemin vers les fichiers contenant les routes de votre API
 };
