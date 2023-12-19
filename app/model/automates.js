@@ -7,7 +7,7 @@ const Automate = getSequelize().define('Automate', {
             allowNull: false
         },
         workspace_id: {
-            type: DataTypes.JSON,
+            type: DataTypes.INTEGER,
             allowNull: true
         },
         trigger: {
@@ -69,7 +69,7 @@ export async function getAllAutomates() {
 export async function getAutomatesByWorkpace(workspace_id) {
     const automates = await Automate.findAll({
         where: {
-            workspace_id
+            workspace_id: workspace_id
         }
     })
     return automates

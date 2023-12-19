@@ -42,45 +42,64 @@ const Workspace = getSequelize().define('Workspace', {
     }
 )
 
-export async function getAllWorkspaces() {
+export async function getAllWorkspaces(user_id) {
+    const result = []
     const workspaces = await Workspace.findAll()
-    return workspaces
+    workspaces.forEach(workspace => {
+        if (workspace.users_id.ids.includes(user_id))
+            result.push(workspace)
+    });
+    return result
 }
 
-export async function getWorkspaceById(id) {
+export async function getWorkspaceById(id, user_id) {
     const workspace = await Workspace.findOne({
         where: {
             id: id
         }
     })
-    return workspace
+    if (workspace && workspace.users_id.ids.includes(user_id))
+        return workspace
+    else if (workspace === null)
+        return 404
+    return 403
 }
 
-export async function getWorkspaceByPrivacy(bool) {
+export async function getWorkspaceByPrivacy(bool, user_id) {
+    const result = []
     const workspaces = await Workspace.findAll({
         where: {
             is_private: bool
         }
     })
-    return workspaces
+    workspaces.forEach(workspace => {
+        if (workspace.users_id.ids.includes(user_id))
+            result.push(workspace)
+    });
+    return result
 }
 
-export async function updateWorkspace(id, changes) {
-    const workspace = await getWorkspaceById(id)
-    if (workspace === null)
-        return true
+export async function updateWorkspace(id, user_id, changes) {
+    const workspace = await getWorkspaceById(id, user_id)
+    if (workspace === 404 || workspace === 403)
+        return workspace
     await workspace.update(changes)
     return false
 }
 
-export async function getWorkspaceVariables(id) {
+export async function getWorkspaceVariables(id, user_id) {
     const workspace = await Workspace.findOne({
         where: {
             id: id
         },
-        attributes: ["variables"]
+        attributes: ['variables', 'users_id']
     })
-    return workspace
+    console.log(workspace);
+    if (workspace && workspace.users_id.ids.includes(user_id))
+        return workspace
+    else if (workspace === null)
+        return 404
+    return 403
 }
 
 export async function createWorkspace(title, description, is_private, users_id, owner_id, variables, secrets) {
@@ -96,10 +115,12 @@ export async function createWorkspace(title, description, is_private, users_id, 
     return newWorkspace
 }
 
-export async function deleteWorkspace(workspace_id) {
-    const workspace = await getWorkspaceById(workspace_id)
-    if (workspace === null)
-        return true
+export async function deleteWorkspace(workspace_id, user_id) {
+    const workspace = await getWorkspaceById(workspace_id, user_id)
+    if (workspace === 404 || workspace === 403)
+        return workspace
+    if (workspace.owner_id !== user_id)
+        return 403
     await workspace.destroy()
     return false
 }
