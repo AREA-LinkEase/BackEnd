@@ -367,7 +367,7 @@ export default function index(app) {
             let json = await getWorkspaceView(true, payload.id)
             return response.status(200).json({result: json})
         } catch(error) {
-            InternalError(response)
+            return response.status(500).json({result: error.toString()})
         }
     })
     app.get('/workspaces/private', async (request, response) => {
