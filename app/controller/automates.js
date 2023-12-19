@@ -73,6 +73,51 @@ const actions = [
     actionAddMusicToQueueSpotify
 ]
 
+async function getAccessToken(refreshToken, link) {
+    const query = new URLSearchParams();
+    query.append('grant_type', 'refresh_token');
+    query.append('refresh_token', refreshToken);
+    const data = await fetch(link, { method: "POST", body: query }).then(response => response.json());
+    return data.access_token;
+}
+
+async function triggerMessageDiscord(option, services) {
+    if (!("discord" in services)) throw "No discord service"
+    let refresh_token = services.discord.refresh_token
+    let access_token = await getAccessToken(refresh_token, "https://accounts.spotify.com/api/token");
+    const messages = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+        method: "GET",
+        headers: {
+            "Authorization": "bearer " + access_token
+        }
+    }).then(response => response.json());
+    return messages.is_playing;
+}
+
+async function actionStartMusicSpotify(option, services) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token);
+    await fetch("https://api.spotify.com/v1/me/player/play", { method: "PUT", body: {
+        "context_uri": option,
+        "offset": {
+            "position": 0
+        },
+        "position_ms": 0
+    },
+    headers: {
+        "Authorization": "bearer " + access_token
+    }}).then(response => response.json());
+
+async function actionAddMusicToQueueSpotify(option, services) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token);
+    await fetch("https://api.spotify.com/v1/me/player/queue?uri=" + encodeURIComponent(option), { method: "POST",
+    headers: {
+        "Authorization": "bearer " + access_token
+    }}).then(response => response.json());
+
 setInterval(async () => {
     let automates = await getAllAutomates()
 
