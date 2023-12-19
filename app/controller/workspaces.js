@@ -407,7 +407,7 @@ export default function index(app) {
             let json = await getAllWorkspaces(payload.id)
             return response.status(200).json({result: json})
         } catch(error) {
-            InternalError(response)
+            return response.status(500).json({result: error})
         }
     })
     app.put('/workspaces/:workspace_id', async (request, response) => {
