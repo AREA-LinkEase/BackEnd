@@ -16,6 +16,7 @@ export async function connectDatabase(isTest = false) {
             sequelizeInstance = new Sequelize({
                 dialect: 'sqlite',
                 storage: ((isTest) ? './test.sqlite' : './app.sqlite'),
+                logging: false,
             })
         } else {
             sequelizeInstance = new Sequelize(
