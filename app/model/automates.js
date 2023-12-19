@@ -61,7 +61,7 @@ Automate.beforeUpdate((automate) => {
     }
 })
 
-export async function getAllAutomates(workspace_id) {
+export async function getAllAutomates() {
     const automates = await Automate.findAll()
     return automates
 }
