@@ -57,7 +57,7 @@ export async function getAllWorkspaces(user_id) {
     const result = []
     const workspaces = await Workspace.findAll()
     workspaces.forEach(workspace => {
-        if (JSON.parse(workspace.users_id.ids).includes(user_id))
+        if (JSON.parse(workspace.users_id).ids.includes(user_id))
             result.push(workspace)
     });
     return result
@@ -69,7 +69,7 @@ export async function getWorkspaceById(id, user_id) {
             id: id
         }
     })
-    if (workspace && JSON.parse(workspace.users_id.ids).includes(user_id))
+    if (workspace && JSON.parse(workspace.users_id).ids.includes(user_id))
         return workspace
     else if (workspace === null)
         return 404
@@ -84,7 +84,7 @@ export async function getWorkspaceByPrivacy(bool, user_id) {
         }
     })
     workspaces.forEach(workspace => {
-        if (JSON.parse(workspace.users_id.ids).includes(user_id))
+        if (JSON.parse(workspace.users_id).ids.includes(user_id))
             result.push(workspace)
     });
     return result
@@ -106,7 +106,7 @@ export async function getWorkspaceVariables(id, user_id) {
         attributes: ['variables', 'users_id']
     })
     console.log(workspace);
-    if (workspace && JSON.parse(workspace.users_id.ids).includes(user_id))
+    if (workspace && JSON.parse(workspace.users_id).ids.includes(user_id))
         return workspace
     else if (workspace === null)
         return 404
