@@ -272,7 +272,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let body = request.body
 
-        if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined,
+        if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined ||
             body.variables === undefined || body.secrets === undefined)
             return UnprocessableEntity(response)
         try {
