@@ -43,7 +43,6 @@ export async function getAllWorkspaces() {
 }
 
 export async function getWorkspaceById(id) {
-    console.log(typeof(id))
     const workspace = await Workspace.findOne({
         where: {
             id: id
@@ -63,7 +62,10 @@ export async function getWorkspaceByPrivacy(bool) {
 
 export async function updateWorkspace(id, changes) {
     const workspace = await getWorkspaceById(id)
+    if (workspace === null)
+        return true
     await workspace.update(changes)
+    return false
 }
 
 export async function getWorkspaceVariables(id) {
@@ -90,7 +92,10 @@ export async function createWorkspace(title, description, is_private, users_id, 
 
 export async function deleteWorkspace(workspace_id) {
     const workspace = await getWorkspaceById(workspace_id)
+    if (workspace === null)
+        return true
     await workspace.destroy()
+    return false
 }
 
 export { Workspace }
