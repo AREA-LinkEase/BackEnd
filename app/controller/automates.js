@@ -1,10 +1,9 @@
-import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, updateAutomate } from "../model/automates.js"
+import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, getAutomatesByWorkpace, updateAutomate } from "../model/automates.js"
 import { getWorkspaceById } from "../model/workspaces.js"
 import {getUserById} from "../model/users.js";
-import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
+import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
 import {getServiceByName} from "../model/services.js";
-import {REDIRECT_URI} from "./services.js";
-import {response} from "express";
+import { getPayload } from "../utils/get_payload.js";
 
 async function getAccessToken(refreshToken, nameService, user) {
     const service = await getServiceByName(nameService)
@@ -127,17 +126,6 @@ export default function index(app) {
     /**
      * @openapi
      * /automates:
-     *   get:
-     *     tags:
-     *       - automates
-     *     description: Get all automates
-     *     security:
-     *       - bearerAuth: []
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Error
      *   post:
      *     tags:
      *       - automates
@@ -172,10 +160,35 @@ export default function index(app) {
      *     responses:
      *       201:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Unknown workspace_id
      *       422:
      *         description: Missing field
+     *       500:
+     *         description: Error
+     * /automates/{workspace_id}:
+     *   get:
+     *     tags:
+     *       - automates
+     *     description: Get automate by id
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: the ID of the workspace of the automate
+     *     responses:
+     *       200:
+     *         description: Success
+     *       403:
+     *         description: Forbidden
+     *       404:
+     *         description: Unknown workspace_id or automate_id
      *       500:
      *         description: Error
      * /automates/{workspace_id}/{automate_id}:
@@ -201,6 +214,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Unknown workspace_id or automate_id
      *       500:
@@ -243,6 +258,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Unknown workspace_id or automate_id
      *       406:
@@ -271,23 +288,64 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Unknown workspace_id or automate_id
      *       500:
      *         description: Error
      */
 
+    app.get('/automates/:workspace_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+        let workspace_id = request.params.workspace_id
+
+        try {
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
+                return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
+            console.log(workspace);
+            let json = await getAutomatesByWorkpace(workspace_id)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            return InternalError(response)
+        }
+    })
+    app.get('/automates/:workspace_id/:automate_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+        let workspace_id = request.params.workspace_id
+        let automate_id = request.params.automate_id
+
+        try {
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
+                return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
+            let json = await getAutomateById(automate_id)
+            if (json === null)
+                return NotFound(response)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
     app.post('/automates/:workspace_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
         let body = request.body
 
-        if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined,
+        if (body.title === undefined || body.workspace_id === undefined || body.workflow === undefined ||
             body.variables === undefined || body.secrets === undefined)
             return UnprocessableEntity(response)
-        let workspace = await getWorkspaceById(workspace_id)
-        if (workspace === null)
-            return NotFound(response)
         try {
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
+                return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
             await createAutomate(
                 body.title,
                 workspace_id,
@@ -300,22 +358,6 @@ export default function index(app) {
             InternalError(response)
         }
     })
-    app.get('/automates/:workspace_id/:automate_id', async (request, response) => {
-        let automate_id = request.params.automate_id
-        let workspace_id = request.params.workspace_id
-
-        let workspace = await getWorkspaceById(workspace_id)
-        if (workspace === null)
-            return NotFound(response)
-        try {
-            let json = await getAutomateById(automate_id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
     app.get('/automates', async (request, response) => {
         try {
             let json = await getAllAutomates()
@@ -325,14 +367,17 @@ export default function index(app) {
         }
     })
     app.put('/automates/:workspace_id/:automate_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
         let automate_id = request.params.automate_id
         let body = request.body
     
-        let workspace = await getWorkspaceById(workspace_id)
-        if (workspace === null)
-            return NotFound(response)
         try {
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
+                return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
             if (Object.keys(body).every((value) => ["title", "action_option", "action", "trigger", "trigger_option"].includes(value)))
                 response.status(406).json({result: "Method Not Allowed"})
             let error = await updateAutomate(automate_id, body)
@@ -344,13 +389,16 @@ export default function index(app) {
         }
     })
     app.delete('/automates/:workspace_id/:automate_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let automate_id = request.params.automate_id
         let workspace_id = request.params.workspace_id
 
-        let workspace = getWorkspaceById(workspace_id)
-        if (workspace === null)
-            return NotFound(response)
         try {
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
+                return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
             let error = await deleteAutomate(automate_id)
             if (error)
                 return NotFound(response)
