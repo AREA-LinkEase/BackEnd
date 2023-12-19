@@ -40,4 +40,13 @@ export async function getServicesById(id) {
     return service
 }
 
+export async function getServiceByName(name) {
+    const service = await Services.findOne({
+        where: {
+            name: name
+        }
+    })
+    return service
+}
+
 export { Services }
