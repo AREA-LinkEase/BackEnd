@@ -13,18 +13,6 @@ export default function index(app) {
      *       - workspaces
      *     security:
      *       - bearerAuth: []
-     *     description: Get all workspaces
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
      *     description: Get all workspaces linked to you
      *     responses:
      *       200:
@@ -285,7 +273,7 @@ export default function index(app) {
      *         description: Unprocessable entity
      *       500:
      *         description: Internal Server Error
-     * /workspaces/:workspace_id/users/:user_id
+     * /workspaces/:workspace_id/users/:user_id:
      *   get:
      *     tags:
      *       - workspaces
@@ -363,11 +351,13 @@ export default function index(app) {
         }
     })
     app.get('/workspaces/viewWorkspaces', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+
         try {
             let json = await getWorkspaceView(true, payload.id)
             return response.status(200).json({result: json})
         } catch(error) {
-            return response.status(500).json({result: error.toString()})
+            InternalError(response)
         }
     })
     app.get('/workspaces/private', async (request, response) => {
