@@ -1,7 +1,7 @@
 import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace } from "../model/workspaces.js"
 import { getAutomatesByWorkpace } from "../model/automates.js"
 import { getPayload } from "../utils/get_payload.js"
-import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
 
 export default function index(app) {
 
@@ -276,7 +276,7 @@ export default function index(app) {
     })
     app.post('/workspaces', async (request, response) => {
         let body = request.body
-        let payload = getPayload(request.headers.token)
+        let payload = getPayload(request.headers.authorization)
 
         if (body.title === undefined || body.description === undefined || body.is_private === undefined)
             return UnprocessableEntity(response)
@@ -287,10 +287,28 @@ export default function index(app) {
                 body.title,
                 body.description,
                 body.is_private,
-                users_id
+                users_id,
+                payload.id
             )
             return response.status(201).json({result: "Workspace created successfully"})
         } catch (error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/:workspace_id/users/:user_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
+        let user_id = parseInt(request.params.user_id)
+
+        try {
+            let workspace = await getWorkspaceById(workspace_id)
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.users_id.ids.includes(user_id))
+                return UnprocessableEntity(response)
+            await updateWorkspace(workspace_id, { users_id: { ids: [...workspace.users_id.ids, user_id] }})
+            return response.status(200).json({result: "Workspace's user_id parameter added successfully"})
+        } catch(error) {
+            console.log(error)
             InternalError(response)
         }
     })
@@ -380,6 +398,26 @@ export default function index(app) {
             delete workspace.variables[variable_name]
             await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
             return response.status(200).json({result: "Workspace's variable deleted successfully"})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.delete('/workspaces/:workspace_id/users/:user_id', async (request, response) => {
+        let workspace_id = request.params.workspace_id
+        let user_id = parseInt(request.params.user_id)
+
+        try {
+            let workspace = await getWorkspaceById(workspace_id)
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.users_id === null || workspace.users_id[user_id])
+                return NotFound(response)
+            if (user_id === workspace.owner_id)
+                return Forbidden(response)
+            const index = workspace.users_id.ids.indexOf(user_id)
+            workspace.users_id.ids.splice(index, 1)
+            await updateWorkspace(workspace_id, { users_id: { ...workspace.users_id } })
+            return response.status(200).json({result: "Workspace's user_id parameter deleted successfully"})
         } catch(error) {
             InternalError(response)
         }
