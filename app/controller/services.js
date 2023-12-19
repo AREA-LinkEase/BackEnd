@@ -59,8 +59,8 @@ export default function index(app) {
         query.append('code', code);
         const data = await fetch(service.dataValues.token_url, { method: "POST", body: query }).then(response => response.json());
         let user = await getUserById(user_id)
-        let services = user.dataValues.services
-        services[service.dataValues.id] = data
+        let services = JSON.parse(user.dataValues.services)
+        services[service.dataValues.name] = data
         await updateUser(user_id, {
             services
         })
