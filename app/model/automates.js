@@ -7,7 +7,7 @@ const Automate = getSequelize().define('Automate', {
             allowNull: false
         },
         workspace_id: {
-            type: DataTypes.JSON,
+            type: DataTypes.INTEGER,
             allowNull: true
         },
         trigger: {
@@ -61,7 +61,7 @@ Automate.beforeUpdate((automate) => {
     }
 })
 
-export async function getAllAutomates() {
+export async function getAllAutomates(workspace_id) {
     const automates = await Automate.findAll()
     return automates
 }
@@ -69,7 +69,7 @@ export async function getAllAutomates() {
 export async function getAutomatesByWorkpace(workspace_id) {
     const automates = await Automate.findAll({
         where: {
-            workspace_id
+            workspace_id: workspace_id
         }
     })
     return automates
@@ -104,7 +104,7 @@ export async function updateAutomate(id, changes) {
 }
 
 export async function deleteAutomate(automate_id) {
-    const automate = await getAutomateById(id)
+    const automate = await getAutomateById(automate_id)
     if (automate === null)
         return true
     await automate.destroy()
