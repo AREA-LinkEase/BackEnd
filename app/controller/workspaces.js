@@ -330,6 +330,7 @@ export default function index(app) {
         } catch(error) {
             InternalError(response)
         }
+    })
     app.get('/workspaces/:workspace_id/enable/:enabled', async (request, response) => {
         let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
@@ -469,6 +470,9 @@ export default function index(app) {
     })
     app.delete('/workspaces/:workspace_id', async (request, response) => {
         let payload = getPayload(request.headers.authorization)
+        let workspace_id = request.params.workspace_id
+
+        try {
             const error = await deleteWorkspace(workspace_id, payload.id)
             if (error === 404)
                 return NotFound(response)
