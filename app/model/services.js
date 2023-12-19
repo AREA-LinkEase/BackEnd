@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize'
 import { getSequelize } from '../getDataBaseConnection.js'
-import {Automate} from "./automates.js";
 
 const Services = getSequelize().define('Service', {
         name: {
@@ -33,7 +32,7 @@ const Services = getSequelize().define('Service', {
 )
 
 export async function getServicesById(id) {
-    const service = await Automate.findOne({
+    const service = await Services.findOne({
         where: {
             id: id
         }

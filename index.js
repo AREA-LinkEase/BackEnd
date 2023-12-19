@@ -7,6 +7,7 @@ import { dirname } from 'path';
 import { connectDatabase } from './app/getDataBaseConnection.js';
 import { swaggerServe, swaggerSetup } from "./config/swagger.js";
 import dotenv from 'dotenv';
+import cors from "cors";
 
 export const DIR_NAME = dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +26,9 @@ app.use('/Assets', root.static('Public'))
 app.use(root.urlencoded({extended: true}))
 app.use(root.json())
 app.use('/docs', swaggerServe, swaggerSetup);
+app.use(cors({
+    origin: ['http://localhost:8081', 'http://135.181.165.228:8081']
+}));
 
 
 connectDatabase().then(() => {
