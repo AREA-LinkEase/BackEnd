@@ -105,7 +105,7 @@ export default function index(app) {
      *       500:
      *         description: Internal Server Error
      */
-    app.post('/register/', async (request, response) => {
+    app.post('/register', async (request, response) => {
         let body = request.body
 
         if (body.username === undefined || body.email === undefined || body.password === undefined)
@@ -148,14 +148,6 @@ export default function index(app) {
             InternalError(response)
         }
     })
-    app.get('/users', async (request, response) => {
-        try {
-            let json = await getAllUsers()
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
     app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
@@ -163,6 +155,14 @@ export default function index(app) {
             let json = await getUserById(user_id)
             if (json === null)
                 return NotFound(response)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/users', async (request, response) => {
+        try {
+            let json = await getAllUsers()
             return response.status(200).json({result: json})
         } catch(error) {
             InternalError(response)
