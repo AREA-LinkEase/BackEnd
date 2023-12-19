@@ -2,28 +2,93 @@ import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, updat
 import { getWorkspaceById } from "../model/workspaces.js"
 import {getUserById} from "../model/users.js";
 import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
+import {getServiceByName} from "../model/services.js";
+import {REDIRECT_URI} from "./services.js";
 
-const triggers = []
-const actions = []
+async function getAccessToken(refreshToken, nameService, user) {
+    const service = await getServiceByName(nameService)
+    const query = new URLSearchParams();
+    query.append('client_id', service.dataValues.client_id);
+    query.append('client_secret', service.dataValues.client_secret);
+    query.append('grant_type', 'refresh_token');
+    query.append('refresh_token', refreshToken);
+    const data = await fetch("https://discord.com/api/v10/oauth2/token", { method: "POST", body: query, headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+    } }).then(response => response.json());
+    let services = user.dataValues.services
+    return data.access_token;
+}
+
+async function actionCreateMessageDiscord(option, services, user) {
+    if (!("discord" in services)) throw "No discord service"
+    let refresh_token = services.discord.refresh_token
+    let access_token = await getAccessToken(refresh_token, "discord", user);
+    await fetch("https://discord.com/api/channels/" + option + "/messages", { method: "POST", body: {
+            "content": "Hello, World!",
+            "embeds": [{
+                "title": "Hello, Embed!",
+                "description": "This is an embedded message."
+    }]},
+    headers: {
+        "Authorization": "Bearer " + services.discord.access_token
+    }}).then(response => response.json());
+}
+
+async function actionCreateReactionDiscord(option, services, user) {
+    if (!("discord" in services)) throw "No discord service"
+    let refresh_token = services.discord.refresh_token
+    let access_token = await getAccessToken(refresh_token, "discord");
+    let parameters = JSON.parse(option)
+    await fetch("https://discord.com/api/channels/" + parameters[0] + "/messages/" + parameters[1] + "/reactions/" + parameters[2] + "/@me", {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + services.discord.access_token
+        }
+    }).then(response => response.json());
+}
+
+async function triggerMessageDiscord(option, services, user) {
+    if (!("discord" in services)) throw "No discord service"
+    let refresh_token = services.discord.refresh_token
+    let access_token = await getAccessToken(refresh_token, "discord");
+    let parameters = JSON.parse(option)
+    const messages = await fetch("https://discord.com/api/channels/" + parameters[0] + "/messages", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + access_token
+        }
+    }).then(response => response.json());
+    console.log(messages)
+    if (!messages.length) return false;
+    return messages[0].content === parameters[1];
+}
+
+const triggers = [
+    triggerMessageDiscord
+]
+const actions = [
+    actionCreateMessageDiscord,
+    actionCreateReactionDiscord
+]
 
 setInterval(async () => {
     let automates = await getAllAutomates()
 
+    console.log(automates)
     for (const automate of automates) {
         let trigger = automate.dataValues.trigger
         let triggerOption = automate.dataValues.trigger_option
         let action = automate.dataValues.action
         let actionOption = automate.dataValues.action_option
 
-        if (trigger === -1 || !trigger || trigger >= triggers.length) continue;
-        if (action === -1 || !action || action >= actions.length) continue;
-
+        if (trigger === -1 || trigger >= triggers.length) continue;
+        if (action === -1 || action >= actions.length) continue;
 
         let workspace = await getWorkspaceById(automate.dataValues.workspace_id)
 
         if (!workspace) continue;
 
-        let logs = automate.dataValues.logs;
+        let logs = JSON.parse(automate.dataValues.logs);
         let users_id = workspace.dataValues.users_id;
 
         for (const user_id of users_id) {
@@ -34,7 +99,7 @@ setInterval(async () => {
                 continue;
             }
 
-            let services = user.dataValues.services;
+            let services = JSON.parse(user.dataValues.services);
 
             if (!services) {
                 logs.push({"type": "error", "message": "A user doesn't setup services"})
@@ -42,9 +107,9 @@ setInterval(async () => {
             }
 
             try {
-                let triggerResult = await triggers[trigger](triggerOption, services);
+                let triggerResult = await triggers[trigger](triggerOption, services, user);
                 if (triggerResult) {
-                    let actionResult = await actions[action](actionOption, services);
+                    let actionResult = await actions[action](actionOption, services, user);
                     logs.push({"type": "success", "message": actionResult});
                 }
             } catch (e) {
