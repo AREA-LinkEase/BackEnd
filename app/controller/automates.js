@@ -2,10 +2,76 @@ import { createAutomate, deleteAutomate, getAllAutomates, getAutomateById, getAu
 import { getWorkspaceById } from "../model/workspaces.js"
 import {getUserById} from "../model/users.js";
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
+import {getServiceByName} from "../model/services.js";
 import { getPayload } from "../utils/get_payload.js";
 
-const triggers = []
-const actions = []
+async function getAccessToken(refreshToken, nameService) {
+    const service = await getServiceByName(nameService)
+    const query = new URLSearchParams();
+    query.append('client_id', service.dataValues.client_id);
+    query.append('client_secret', service.dataValues.client_secret);
+    query.append('grant_type', 'refresh_token');
+    query.append('refresh_token', refreshToken);
+    const data = await fetch("https://accounts.spotify.com/api/token", { method: "POST", body: query, headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+    } }).then(response => response.json());
+    if ("error" in data) throw "Error with access token"
+    return data.access_token;
+}
+
+async function triggerCurrentlyPlaying(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + access_token
+        }
+    })
+    if (response.status === 204)
+        return false;
+    let message = await response.json();
+    return message.is_playing;
+}
+
+async function triggerNotPlaying(option, services, user) {
+    return !(await triggerCurrentlyPlaying(option, services, user));
+}
+
+async function actionStartMusicSpotify(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + access_token,
+            'Content-Type': 'application/json'
+        }
+    })
+}
+
+async function actionAddMusicToQueueSpotify(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    await fetch("https://api.spotify.com/v1/me/player/queue?uri=" + encodeURIComponent(option), {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + access_token
+        }
+    })
+}
+
+const triggers = [
+    triggerNotPlaying,
+    triggerCurrentlyPlaying
+]
+const actions = [
+    actionStartMusicSpotify,
+    actionAddMusicToQueueSpotify
+]
 
 setInterval(async () => {
     let automates = await getAllAutomates()
@@ -16,15 +82,14 @@ setInterval(async () => {
         let action = automate.dataValues.action
         let actionOption = automate.dataValues.action_option
 
-        if (trigger === -1 || !trigger || trigger >= triggers.length) continue;
-        if (action === -1 || !action || action >= actions.length) continue;
-
+        if (trigger === -1 || trigger >= triggers.length) continue;
+        if (action === -1 || action >= actions.length) continue;
 
         let workspace = await getWorkspaceById(automate.dataValues.workspace_id)
 
         if (!workspace) continue;
 
-        let logs = automate.dataValues.logs;
+        let logs = JSON.parse(automate.dataValues.logs);
         let users_id = workspace.dataValues.users_id;
 
         for (const user_id of users_id) {
@@ -35,7 +100,7 @@ setInterval(async () => {
                 continue;
             }
 
-            let services = user.dataValues.services;
+            let services = JSON.parse(user.dataValues.services);
 
             if (!services) {
                 logs.push({"type": "error", "message": "A user doesn't setup services"})
@@ -43,9 +108,9 @@ setInterval(async () => {
             }
 
             try {
-                let triggerResult = await triggers[trigger](triggerOption, services);
+                let triggerResult = await triggers[trigger](triggerOption, services, user);
                 if (triggerResult) {
-                    let actionResult = await actions[action](actionOption, services);
+                    let actionResult = await actions[action](actionOption, services, user);
                     logs.push({"type": "success", "message": actionResult});
                 }
             } catch (e) {
