@@ -1,4 +1,4 @@
-import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace } from "../model/workspaces.js"
+import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace, getWorkspaceView } from "../model/workspaces.js"
 import { getAutomatesByWorkpace } from "../model/automates.js"
 import { getPayload } from "../utils/get_payload.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
@@ -14,6 +14,18 @@ export default function index(app) {
      *     security:
      *       - bearerAuth: []
      *     description: Get all workspaces
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     * /workspaces:
+     *   get:
+     *     tags:
+     *       - workspaces
+     *     security:
+     *       - bearerAuth: []
+     *     description: Get all workspaces linked to you
      *     responses:
      *       200:
      *         description: Success
@@ -273,6 +285,41 @@ export default function index(app) {
      *         description: Unprocessable entity
      *       500:
      *         description: Internal Server Error
+     * /workspaces/:workspace_id/users/:user_id
+     *   get:
+     *     tags:
+     *       - workspaces
+     *     description: Add a user by id in a workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: Workspace's ID to get
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: User's ID to add
+     *   delete:
+     *     tags:
+     *       - workspaces
+     *     description: Delete a user by id in a workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: Workspace's ID to get
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: User's ID to delete
      */
     app.post('/workspaces/:workspace_id/variables', async (request, response) => {
         let payload = getPayload(request.headers.authorization)
@@ -312,6 +359,30 @@ export default function index(app) {
             )
             return response.status(201).json({result: "Workspace created successfully"})
         } catch (error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/viewWorkspaces', async (request, response) => {
+        try {
+            let json = await getWorkspaceView(true, payload.id)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/private', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(true)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/public', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(false)
+            return response.status(200).json({result: json})
+        } catch(error) {
             InternalError(response)
         }
     })
@@ -376,26 +447,6 @@ export default function index(app) {
             else if (json === 403)
                 return Forbidden(response)
             return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/private', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let json = await getWorkspaceByPrivacy(true, payload.id)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/public', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let json = await getWorkspaceByPrivacy(false, payload.id)
-            return response.status(200).json({result: json})
         } catch(error) {
             InternalError(response)
         }
