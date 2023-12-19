@@ -259,6 +259,41 @@ export default function index(app) {
      *         description: Unprocessable entity
      *       500:
      *         description: Internal Server Error
+     * /workspaces/:workspace_id/users/:user_id
+     *   get:
+     *     tags:
+     *       - workspaces
+     *     description: Add a user by id in a workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: Workspace's ID to get
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: User's ID to add
+     *   delete:
+     *     tags:
+     *       - workspaces
+     *     description: Delete a user by id in a workspace by id
+     *     parameters:
+     *       - in: path
+     *         name: workspace_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: Workspace's ID to get
+     *       - in: path
+     *         name: user_id
+     *         required: true
+     *         schema:
+     *           type: integer
+     *         description: User's ID to delete
      */
 
     app.post('/workspaces/:workspace_id/variables', async (request, response) => {
