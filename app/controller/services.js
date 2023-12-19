@@ -2,7 +2,7 @@ import {getServicesById} from "../model/services.js";
 import {getUserById, updateUser} from "../model/users.js";
 import { BadRequest, NotFound } from "../utils/request_error.js";
 
-const REDIRECT_URI = "http://135.181.165.228:8080/services/callback"
+export const REDIRECT_URI = "http://localhost:8080/services/callback"
 
 export default function index(app) {
 
@@ -38,7 +38,7 @@ export default function index(app) {
         response.redirect(
             service.dataValues.auth_url + "?client_id=" +
             service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
-            "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope)  +
+            "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope) +
             "&state=" + id_service)
     })
     app.get('/services/callback', async (request, response) => {
