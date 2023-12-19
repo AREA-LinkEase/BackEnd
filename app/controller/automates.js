@@ -5,7 +5,7 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
 import {getServiceByName} from "../model/services.js";
 import { getPayload } from "../utils/get_payload.js";
 
-async function getAccessToken(refreshToken, nameService, user) {
+async function getAccessToken(refreshToken, nameService) {
     const service = await getServiceByName(nameService)
     const query = new URLSearchParams();
     query.append('client_id', service.dataValues.client_id);
@@ -43,7 +43,7 @@ async function actionStartMusicSpotify(option, services, user) {
     if (!("spotify" in services)) throw "No spotify service"
     let refresh_token = services.spotify.refresh_token
     let access_token = await getAccessToken(refresh_token, "spotify", user);
-    const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+    await fetch("https://api.spotify.com/v1/me/player/play", {
         method: "PUT",
         headers: {
             "Authorization": "Bearer " + access_token,
@@ -56,7 +56,7 @@ async function actionAddMusicToQueueSpotify(option, services, user) {
     if (!("spotify" in services)) throw "No spotify service"
     let refresh_token = services.spotify.refresh_token
     let access_token = await getAccessToken(refresh_token, "spotify", user);
-    const response = await fetch("https://api.spotify.com/v1/me/player/queue?uri=" + encodeURIComponent(option), {
+    await fetch("https://api.spotify.com/v1/me/player/queue?uri=" + encodeURIComponent(option), {
         method: "POST",
         headers: {
             "Authorization": "Bearer " + access_token
