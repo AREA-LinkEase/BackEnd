@@ -135,15 +135,16 @@ export default function index(app) {
             let user = await getUserByUsername(username)
             if (user === null)
                 user = await getUserByEmail(username)
-            if (user === null || plainPassword === undefined)
-                return Unauthorized(response)
+            if (user === null)
+                return NotFound(response)
             let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
             if (isValidPassword === true) {
                 const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
                     expiresIn: '2h',
                 });
                 return response.status(200).json({jwt: token})    
-            }
+            } else
+                return Unauthorized(response)
         } catch (error) {
             InternalError(response)
         }

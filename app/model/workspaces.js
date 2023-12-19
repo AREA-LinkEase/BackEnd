@@ -31,6 +31,11 @@ const Workspace = getSequelize().define('Workspace', {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true
+        },
+        owner_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: -1
         }
     }, {
         timestamps: false,
@@ -78,14 +83,15 @@ export async function getWorkspaceVariables(id) {
     return workspace
 }
 
-export async function createWorkspace(title, description, is_private, users_id, variables, secrets) {
+export async function createWorkspace(title, description, is_private, users_id, owner_id, variables, secrets) {
     const newWorkspace = await Workspace.create({
         title: title,
         description: description,
         is_private: is_private,
         users_id: users_id,
         variables: variables,
-        secrets: secrets
+        secrets: secrets,
+        owner_id: owner_id
     });
     return newWorkspace
 }
