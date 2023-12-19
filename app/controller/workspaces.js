@@ -88,6 +88,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       500:
@@ -116,6 +118,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       500:
@@ -136,6 +140,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       500:
@@ -187,6 +193,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       422:
@@ -210,6 +218,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       500:
@@ -238,6 +248,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       500:
@@ -265,6 +277,8 @@ export default function index(app) {
      *     responses:
      *       200:
      *         description: Success
+     *       403:
+     *         description: Forbidden
      *       404:
      *         description: Workspace not found
      *       422:
@@ -307,17 +321,23 @@ export default function index(app) {
      *           type: integer
      *         description: User's ID to delete
      */
-
     app.post('/workspaces/:workspace_id/variables', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
         let body = request.body
+
         try {
-            let workspace = await getWorkspaceById(workspace_id)
-            if (workspace === null)
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
                 return NotFound(response)
-            await updateWorkspace(workspace_id, { variables: { ...workspace.variables, ...body }})
+            const error = await updateWorkspace(workspace_id, payload.id, { variables: { ...workspace.variables, ...body }})
+            if (error === 404)
+                return NotFound(response)
+            else if (error === 403)
+                return Forbidden(response)
             return response.status(200).json({result: "Workspace's variable created successfully"})
         } catch(error) {
+            console.log(error);
             InternalError(response)
         }
     })
@@ -379,79 +399,101 @@ export default function index(app) {
             await updateWorkspace(workspace_id, { users_id: { ids: [...workspace.users_id.ids, user_id] }})
             return response.status(200).json({result: "Workspace's user_id parameter added successfully"})
         } catch(error) {
-            console.log(error)
             InternalError(response)
         }
     })
     app.get('/workspaces/:workspace_id/enable/:enabled', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
         let enabled = request.params.enabled
+
         try {
             if (enabled != "true" && enabled != "false")
                 return UnprocessableEntity(response)
-            const error = await updateWorkspace(workspace_id, { enabled: enabled })
-            if (error)
+            const error = await updateWorkspace(workspace_id, payload.id, { enabled: enabled })
+            if (error === 404)
                 return NotFound(response)
+            else if (error === 403)
+                return Forbidden(response)
             return response.status(200).json({result: "Workspace's enabled parameter changed successfully"})
         } catch(error) {
             InternalError(response)
         }
     })
     app.get('/workspaces/:workspace_id/variables', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
+
         try {
-            let json = await getWorkspaceVariables(workspace_id)
-            if (json === null)
+            let json = await getWorkspaceVariables(workspace_id, payload.id)
+            if (json === 404)
                 return NotFound(response)
+            else if (json === 403)
+                return Forbidden(response)
             return response.status(200).json({result: json.variables})
         } catch(error) {
             InternalError(response)
         }
-    })
+    })            
     app.get('/workspaces/:workspace_id', async (request, response) => {
         let workspace_id = request.params.workspace_id
+        let payload = getPayload(request.headers.authorization)
 
         try {
             let automates = await getAutomatesByWorkpace(workspace_id)
-            let json = await getWorkspaceById(workspace_id)
-            if (json === null)
+            let json = await getWorkspaceById(workspace_id, payload.id)
+            if (json === 404)
                 return NotFound(response)
+            else if (json === 403)
+                return Forbidden(response)
             return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
         } catch(error) {
             InternalError(response)
         }
     })
     app.get('/workspaces', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+
         try {
-            let json = await getAllWorkspaces()
+            let json = await getAllWorkspaces(payload.id)
             return response.status(200).json({result: json})
         } catch(error) {
-            InternalError(response)
+            return response.status(500).json({result: error.toString()})
         }
     })
     app.put('/workspaces/:workspace_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
         let body = request.body
+
         try {
-            const error = await updateWorkspace(workspace_id, body)
-            if (error)
+            const error = await updateWorkspace(workspace_id, payload.id, body)
+            if (error === 404)
                 return NotFound(response)
+            else if (error === 403)
+                return Forbidden(response)
             return response.status(200).json({result: "Workspace's name changed successfully"})
         } catch(error) {
+            console.log(error);
+
             InternalError(response)
         }
     })
     app.delete('/workspaces/:workspace_id/variables/:variable_name', async (request, response) => {
         let workspace_id = request.params.workspace_id
         let variable_name = request.params.variable_name
+        let payload = getPayload(request.headers.authorization)
+
         try {
-            let workspace = await getWorkspaceById(workspace_id)
-            if (workspace === null)
+            let workspace = await getWorkspaceById(workspace_id, payload.id)
+            if (workspace === 404)
                 return NotFound(response)
+            else if (workspace === 403)
+                return Forbidden(response)
             if (workspace.variables === null || workspace.variables[variable_name])
                 return NotFound(response)
             delete workspace.variables[variable_name]
-            await updateWorkspace(workspace_id, { variables: { ...workspace.variables }})
+            await updateWorkspace(workspace_id, payload.id, { variables: { ...workspace.variables }})
             return response.status(200).json({result: "Workspace's variable deleted successfully"})
         } catch(error) {
             InternalError(response)
@@ -478,12 +520,15 @@ export default function index(app) {
         }
     })
     app.delete('/workspaces/:workspace_id', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
         let workspace_id = request.params.workspace_id
 
         try {
-            const error = await deleteWorkspace(workspace_id)
-            if (error)
+            const error = await deleteWorkspace(workspace_id, payload.id)
+            if (error === 404)
                 return NotFound(response)
+            else if (error === 403)
+                return Forbidden(response)
             return response.status(200).json({result: "Workspace deleted successfully"})
         } catch (error) {
             InternalError(response)
