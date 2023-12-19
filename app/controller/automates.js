@@ -4,6 +4,7 @@ import {getUserById} from "../model/users.js";
 import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
 import {getServiceByName} from "../model/services.js";
 import {REDIRECT_URI} from "./services.js";
+import {response} from "express";
 
 async function getAccessToken(refreshToken, nameService, user) {
     const service = await getServiceByName(nameService)
@@ -12,69 +13,70 @@ async function getAccessToken(refreshToken, nameService, user) {
     query.append('client_secret', service.dataValues.client_secret);
     query.append('grant_type', 'refresh_token');
     query.append('refresh_token', refreshToken);
-    const data = await fetch("https://discord.com/api/v10/oauth2/token", { method: "POST", body: query, headers: {
+    const data = await fetch("https://accounts.spotify.com/api/token", { method: "POST", body: query, headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
     } }).then(response => response.json());
-    let services = user.dataValues.services
+    if ("error" in data) throw "Error with access token"
     return data.access_token;
 }
 
-async function actionCreateMessageDiscord(option, services, user) {
-    if (!("discord" in services)) throw "No discord service"
-    let refresh_token = services.discord.refresh_token
-    let access_token = await getAccessToken(refresh_token, "discord", user);
-    await fetch("https://discord.com/api/channels/" + option + "/messages", { method: "POST", body: {
-            "content": "Hello, World!",
-            "embeds": [{
-                "title": "Hello, Embed!",
-                "description": "This is an embedded message."
-    }]},
-    headers: {
-        "Authorization": "Bearer " + services.discord.access_token
-    }}).then(response => response.json());
-}
-
-async function actionCreateReactionDiscord(option, services, user) {
-    if (!("discord" in services)) throw "No discord service"
-    let refresh_token = services.discord.refresh_token
-    let access_token = await getAccessToken(refresh_token, "discord");
-    let parameters = JSON.parse(option)
-    await fetch("https://discord.com/api/channels/" + parameters[0] + "/messages/" + parameters[1] + "/reactions/" + parameters[2] + "/@me", {
-        method: "PUT",
-        headers: {
-            "Authorization": "Bearer " + services.discord.access_token
-        }
-    }).then(response => response.json());
-}
-
-async function triggerMessageDiscord(option, services, user) {
-    if (!("discord" in services)) throw "No discord service"
-    let refresh_token = services.discord.refresh_token
-    let access_token = await getAccessToken(refresh_token, "discord");
-    let parameters = JSON.parse(option)
-    const messages = await fetch("https://discord.com/api/channels/" + parameters[0] + "/messages", {
+async function triggerCurrentlyPlaying(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
         method: "GET",
         headers: {
             "Authorization": "Bearer " + access_token
         }
-    }).then(response => response.json());
-    console.log(messages)
-    if (!messages.length) return false;
-    return messages[0].content === parameters[1];
+    })
+    if (response.status === 204)
+        return false;
+    let message = await response.json();
+    return message.is_playing;
+}
+
+async function triggerNotPlaying(option, services, user) {
+    return !(await triggerCurrentlyPlaying(option, services, user));
+}
+
+async function actionStartMusicSpotify(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+            "Authorization": "Bearer " + access_token,
+            'Content-Type': 'application/json'
+        }
+    })
+}
+
+async function actionAddMusicToQueueSpotify(option, services, user) {
+    if (!("spotify" in services)) throw "No spotify service"
+    let refresh_token = services.spotify.refresh_token
+    let access_token = await getAccessToken(refresh_token, "spotify", user);
+    const response = await fetch("https://api.spotify.com/v1/me/player/queue?uri=" + encodeURIComponent(option), {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + access_token
+        }
+    })
 }
 
 const triggers = [
-    triggerMessageDiscord
+    triggerNotPlaying,
+    triggerCurrentlyPlaying
 ]
 const actions = [
-    actionCreateMessageDiscord,
-    actionCreateReactionDiscord
+    actionStartMusicSpotify,
+    actionAddMusicToQueueSpotify
 ]
 
 setInterval(async () => {
     let automates = await getAllAutomates()
 
-    console.log(automates)
     for (const automate of automates) {
         let trigger = automate.dataValues.trigger
         let triggerOption = automate.dataValues.trigger_option
