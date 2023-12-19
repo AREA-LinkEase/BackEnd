@@ -293,22 +293,6 @@ export default function index(app) {
             InternalError(response)
         }
     })
-    app.get('/automates/:workspace_id/:automate_id', async (request, response) => {
-        let automate_id = request.params.automate_id
-        let workspace_id = request.params.workspace_id
-
-        let workspace = await getWorkspaceById(workspace_id)
-        if (workspace === null)
-            return NotFound(response)
-        try {
-            let json = await getAutomateById(automate_id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
     app.get('/automates', async (request, response) => {
         try {
             let json = await getAllAutomates()
