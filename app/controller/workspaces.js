@@ -1,4 +1,4 @@
-import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace } from "../model/workspaces.js"
+import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace, getWorkspaceView } from "../model/workspaces.js"
 import { getAutomatesByWorkpace } from "../model/automates.js"
 import { getPayload } from "../utils/get_payload.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
@@ -14,6 +14,18 @@ export default function index(app) {
      *     security:
      *       - bearerAuth: []
      *     description: Get all workspaces
+     *     responses:
+     *       200:
+     *         description: Success
+     *       500:
+     *         description: Internal Server Error
+     * /workspaces:
+     *   get:
+     *     tags:
+     *       - workspaces
+     *     security:
+     *       - bearerAuth: []
+     *     description: Get all workspaces linked to you
      *     responses:
      *       200:
      *         description: Success
@@ -330,6 +342,30 @@ export default function index(app) {
             InternalError(response)
         }
     })
+    app.get('/workspaces/viewWorkspaces', async (request, response) => {
+        try {
+            let json = await getWorkspaceView(true, payload.id)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/private', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(true)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/public', async (request, response) => {
+        try {
+            let json = await getWorkspaceByPrivacy(false)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
     app.get('/workspaces/:workspace_id/users/:user_id', async (request, response) => {
         let workspace_id = request.params.workspace_id
         let user_id = parseInt(request.params.user_id)
@@ -381,22 +417,6 @@ export default function index(app) {
             if (json === null)
                 return NotFound(response)
             return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/private', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(true)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/public', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(false)
-            return response.status(200).json({result: json})
         } catch(error) {
             InternalError(response)
         }

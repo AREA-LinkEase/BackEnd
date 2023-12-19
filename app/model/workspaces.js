@@ -42,6 +42,16 @@ const Workspace = getSequelize().define('Workspace', {
     }
 )
 
+export async function getWorkspaceView() {
+    const workspaces = await Workspace.findAll({
+        where: {
+            is_private: false
+        },
+        attributes: ['title', 'description']
+    })
+    return workspaces
+}
+
 export async function getAllWorkspaces() {
     const workspaces = await Workspace.findAll()
     return workspaces
