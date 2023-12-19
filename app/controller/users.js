@@ -2,7 +2,6 @@ import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUs
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
 import { InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
-import { UnknownConstraintError } from "sequelize"
 
 export default function index(app) {
 
