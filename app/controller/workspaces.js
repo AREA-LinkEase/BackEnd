@@ -1,7 +1,7 @@
 import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace } from "../model/workspaces.js"
 import { getAutomatesByWorkpace } from "../model/automates.js"
 import { getPayload } from "../utils/get_payload.js"
-import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
 
 export default function index(app) {
 

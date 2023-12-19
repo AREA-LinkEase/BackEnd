@@ -104,7 +104,7 @@ export async function updateAutomate(id, changes) {
 }
 
 export async function deleteAutomate(automate_id) {
-    const automate = await getAutomateById(id)
+    const automate = await getAutomateById(automate_id)
     if (automate === null)
         return true
     await automate.destroy()
