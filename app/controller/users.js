@@ -192,6 +192,18 @@ export default function index(app) {
             InternalError(response)
         }
     })
+    app.get('/users/self', async (request, response) => {
+        let payload = getPayload(request.headers.authorization)
+
+        try {
+            const json = await getUserById(payload.id)
+            if (json === null)
+                return response.status(404).json({result: payload.id})
+            return response.status(200).json({result: json})
+        } catch (error) {
+            InternalError(response)
+        }
+    })
     app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
@@ -201,18 +213,6 @@ export default function index(app) {
                 return NotFound(response)
             return response.status(200).json({result: json})
         } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users/user', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            const json = await getUserById(payload.id)
-            if (json === null)
-                return response.status(404).json({result: payload.id})
-            return response.status(200).json({result: json})
-        } catch (error) {
             InternalError(response)
         }
     })
