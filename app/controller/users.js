@@ -194,10 +194,7 @@ export default function index(app) {
     })
     app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
-        let payload = getPayload(request.headers.authorization)
 
-        if (user_id !== payload.id)
-            return Forbidden(response)
         try {
             let json = await getUserById(user_id)
             if (json === null)
