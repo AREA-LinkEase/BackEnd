@@ -2,7 +2,7 @@
 
 ## Description
 
-LinkEase is a backend project designed to function like IFTTT (If This Then That). IFTTT is a service that allows users to create simple conditional statements known as applets, which trigger automated actions based on changes to other web services.
+LinkEase est un projet backend visant à créer un service similaire à IFTTT (If This Then That). IFTTT est une plateforme permettant aux utilisateurs de créer des flux de travail automatisés en connectant diverses applications et appareils. De manière similaire, LinkEase propose une plateforme personnalisable pour la création de tâches automatisées basées sur des déclencheurs et des actions prédéfinis.
 
 ## Technologies Utilisées
 
