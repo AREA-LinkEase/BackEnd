@@ -204,6 +204,18 @@ export default function index(app) {
             return InternalError(response)
         }
     })
+    app.get('/users/:username', async (request, response) => {
+        let username = request.params.username
+
+        try {
+            let json = await getUserById(username)
+            if (json === null)
+                return NotFound(response)
+            return response.status(200).json({result: json})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
     app.get('/users/:user_id', async (request, response) => {
         let user_id = request.params.user_id
 
