@@ -33,7 +33,8 @@ export async function getUserById(id) {
     const user = await User.findOne({
         where: {
             id: id
-        }
+        },
+        attributes: ['username']
     })
     return user
 }
