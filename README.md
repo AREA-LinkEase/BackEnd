@@ -53,6 +53,10 @@ LinkEase utilise une architecture similaire à un modèle MVC, comprenant des co
 
 Consultez la documentation Swagger pour explorer les endpoints et tester l'API : [http://{url}:8080/docs](http://{url}:8080/docs)
 
+## Contribution
+
+Vous pourrez trouver les informations nécessaire sur [ce page](contributing.md)
+
 ## Contributeurs
 
 - Younes Bahri - DevOps, Développeur Back-end
