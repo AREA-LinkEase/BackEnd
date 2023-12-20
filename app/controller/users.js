@@ -1,4 +1,4 @@
-import { createUser, deleteUser, getAllUsers, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
+import { createUser, deleteUser, getAllUsers, getSelf, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
 import { Forbidden, InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
