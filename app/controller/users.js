@@ -206,7 +206,7 @@ export default function index(app) {
     })
     app.get('/users/username/:username', async (request, response) => {
         let username = request.params.username
-
+        console.log("je suis dedans");
         try {
             let json = await getUserById(username)
             if (json === null)
