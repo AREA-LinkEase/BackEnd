@@ -201,7 +201,7 @@ export default function index(app) {
                 return NotFound(response)
             return response.status(200).json({result: json})
         } catch (error) {
-            return response.status(500).json({result: error})
+            return response.status(500).json({result: error.toString()})
         }
     })
     app.get('/users/:user_id', async (request, response) => {
