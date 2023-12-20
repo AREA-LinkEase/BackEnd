@@ -204,7 +204,7 @@ export default function index(app) {
             return InternalError(response)
         }
     })
-    app.get('/users/:username', async (request, response) => {
+    app.get('/users/username/:username', async (request, response) => {
         let username = request.params.username
 
         try {
