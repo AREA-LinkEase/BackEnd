@@ -337,8 +337,7 @@ export default function index(app) {
         let workspace_id = request.params.workspace_id
         let body = request.body
 
-        if (body.title === undefined || body.workspace_id === undefined ||
-            body.variables === undefined || body.secrets === undefined)
+        if (body.title === undefined || body.workspace_id === undefined)
             return UnprocessableEntity(response)
         try {
             let workspace = await getWorkspaceById(workspace_id, payload.id)
