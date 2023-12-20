@@ -31,8 +31,8 @@ export default function index(app) {
      *         description: Service not found
      */
 
-    app.get('/services/connect/:id_service', async (request, response) => {
-        let payload = getPayload(request.headers.authorization);
+    app.get('/services/connect/:id_service/:authorization', async (request, response) => {
+        let payload = getPayload("Bearer " + request.params.authorization);
         let id_service = request.params.id_service;
         let service = await getServicesById(id_service)
 
