@@ -39,6 +39,16 @@ export async function getUserById(id) {
     return user
 }
 
+export async function getIdByUsername(username) {
+    const user = await User.findOne({
+        where: {
+            username: username
+        },
+        attributes: ['id']
+    })
+    return user
+}
+
 export async function getSelf(id) {
     const user = await User.findOne({
         where: {
