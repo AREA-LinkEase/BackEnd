@@ -1,5 +1,6 @@
 import {getServicesById} from "../model/services.js";
 import {getUserById, updateUser} from "../model/users.js";
+import { getPayload } from "../utils/get_payload.js";
 import { BadRequest, NotFound } from "../utils/request_error.js";
 
 export const REDIRECT_URI = "http://localhost:8080/services/callback"
@@ -31,6 +32,7 @@ export default function index(app) {
      */
 
     app.get('/services/connect/:id_service', async (request, response) => {
+        let payload = getPayload(request.headers.authorization);
         let id_service = request.params.id_service;
         let service = await getServicesById(id_service)
 
@@ -39,12 +41,11 @@ export default function index(app) {
             service.dataValues.auth_url + "?client_id=" +
             service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
             "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope) +
-            "&state=" + id_service)
+            "&state=" + id_service + ',' + payload.id)
     })
     app.get('/services/callback', async (request, response) => {
-        let user_id = 0;
         let code = request.query.code;
-        let id_service = request.query.state;
+        let [id_service, user_id] = request.query.state.split(',');
         let service = await getServicesById(id_service)
 
         if (!service) return NotFound(response)
