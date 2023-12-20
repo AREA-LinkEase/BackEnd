@@ -3,7 +3,7 @@ import {getUserById, updateUser} from "../model/users.js";
 import { getPayload } from "../utils/get_payload.js";
 import { BadRequest, NotFound } from "../utils/request_error.js";
 
-export const REDIRECT_URI = "http://localhost:8080/services/callback"
+export const REDIRECT_URI = "http://135.181.165.228:8080/services/callback"
 
 export default function index(app) {
 
