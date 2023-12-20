@@ -198,10 +198,10 @@ export default function index(app) {
         try {
             const json = await getSelf(payload.id)
             if (json === null)
-                return response.status(404).json({result: payload.id})
+                return NotFound(response)
             return response.status(200).json({result: json})
         } catch (error) {
-            InternalError(response)
+            return response.status(500).json({result: error})
         }
     })
     app.get('/users/:user_id', async (request, response) => {
