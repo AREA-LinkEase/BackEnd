@@ -213,7 +213,7 @@ export default function index(app) {
                 return NotFound(response)
             return response.status(200).json({result: json})
         } catch (error) {
-            InternalError(response)
+            return response.status(500).json({result: error})
         }
     })
     app.get('/users', async (request, response) => {
