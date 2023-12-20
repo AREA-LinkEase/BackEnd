@@ -34,7 +34,6 @@ export async function getUserById(id) {
         where: {
             id: id
         },
-        attributes: ['username']
     })
     return user
 }
