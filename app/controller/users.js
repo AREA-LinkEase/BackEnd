@@ -196,7 +196,7 @@ export default function index(app) {
         let payload = getPayload(request.headers.authorization)
 
         try {
-            const json = await getUserById(payload.id)
+            const json = await getSelf(payload.id)
             if (json === null)
                 return response.status(404).json({result: payload.id})
             return response.status(200).json({result: json})
