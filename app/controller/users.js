@@ -8,56 +8,6 @@ export default function index(app) {
 
     /**
      * @openapi
-     * /login:
-     *   post:
-     *     tags:
-     *       - users
-     *     description: Login
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Success
-     *       401:
-     *         description: Unauthorized
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Internal Server Error
-     * /register:
-     *   post:
-     *     tags:
-     *       - users
-     *     description: Create a new user
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *               email:
-     *                 type: string
-     *     responses:
-     *       201:
-     *         description: Success
-     *       409:
-     *         description: Username or email already taken
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Internal Server Error
      * /users:
      *   get:
      *     tags:
@@ -148,50 +98,6 @@ export default function index(app) {
      *       500:
      *         description: Internal Server Error
      */
-    app.post('/register', async (request, response) => {
-        let body = request.body
-
-        if (body.username === undefined || body.email === undefined || body.password === undefined)
-            return UnprocessableEntity(response)
-        try {
-            let hashed_password = await hashPassword(body.password)
-            await createUser(
-                body.username,
-                body.email,
-                hashed_password,
-            )
-            return response.status(201).json({result: "User created successfully"})
-        } catch (error) {
-            if (error.name === "SequelizeUniqueConstraintError") {
-                return response.status(409).json({error: "Username or email is already taken"})
-            }
-            InternalError(response)
-        }
-    })
-    app.post('/login', async (request, response) => {
-        let username = request.body.username
-        let plainPassword = request.body.password
-
-        if (username === undefined || plainPassword === undefined)
-            return UnprocessableEntity(response)
-        try {
-            let user = await getUserByUsername(username)
-            if (user === null)
-                user = await getUserByEmail(username)
-            if (user === null)
-                return NotFound(response)
-            let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
-            if (isValidPassword === true) {
-                const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
-                    expiresIn: '2h',
-                });
-                return response.status(200).json({jwt: "Bearer " + token})
-            } else
-                return Unauthorized(response)
-        } catch (error) {
-            InternalError(response)
-        }
-    })
     app.get('/users/self', async (request, response) => {
         let payload = getPayload(request.headers.authorization)
 

@@ -13,6 +13,7 @@ class RequestError extends Function {
 
 export const BadRequest = new RequestError(400, "Bad Request")
 export const Unauthorized = new RequestError(401, "Unauthorized")
+export const Conflict = new RequestError(409, "Conflict")
 export const Forbidden = new RequestError(403, "Forbidden")
 export const NotFound = new RequestError(404, "Not Found")
 export const UnprocessableEntity = new RequestError(422, "Unprocessable Entity")
