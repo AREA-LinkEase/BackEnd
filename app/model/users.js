@@ -1,4 +1,4 @@
-import {DataTypes} from 'sequelize'
+import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 
 const User = getSequelize().define('users', {
@@ -23,11 +23,23 @@ const User = getSequelize().define('users', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('services'));
+        },
+        set: function (value) {
+            this.setDataValue('services', JSON.stringify(value));
+        }
     },
     friends: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('friends'));
+        },
+        set: function (value) {
+            this.setDataValue('friends', JSON.stringify(value));
+        }
     },
     type: {
         type: DataTypes.STRING,
@@ -98,6 +110,19 @@ export async function deleteUser(user_id) {
         return true
     await user.destroy()
     return false
-} 
+}
+
+export async function searchUser(input) {
+    return User.findAll({
+        where: {
+            email: {
+                [Op.like]: `%${input}%`
+            },
+            username: {
+                [Op.like]: `%${input}%`
+            }
+        }
+    })
+}
 
 export { User }

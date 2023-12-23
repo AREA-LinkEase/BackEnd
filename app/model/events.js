@@ -25,6 +25,12 @@ const Events = getSequelize().define('events', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '{}',
+        get: function () {
+            return JSON.parse(this.getDataValue('workflow'));
+        },
+        set: function (value) {
+            this.setDataValue('workflow', JSON.stringify(value));
+        }
     },
     type: {
         type: DataTypes.STRING,

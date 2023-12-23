@@ -45,6 +45,12 @@ const Services = getSequelize().define('services', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('users_id'));
+        },
+        set: function (value) {
+            this.setDataValue('users_id', JSON.stringify(value));
+        }
     },
     is_private: {
         type: DataTypes.BOOLEAN,

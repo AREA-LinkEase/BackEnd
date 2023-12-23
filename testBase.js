@@ -12,6 +12,9 @@ app.use(root.urlencoded({extended: true}))
 app.use(root.json())
 
 export async function setupTest() {
+    import('./app/middleware/auth.js').then(({ executeAuthMiddleware }) => {
+        executeAuthMiddleware(app)
+    });
     await connectDatabase(true);
     index(app, "default")
 }
