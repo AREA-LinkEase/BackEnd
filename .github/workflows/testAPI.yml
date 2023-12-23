@@ -5,6 +5,8 @@ on: [pull_request]
 jobs:
   compile:
     runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: "MIICWgIBAAKBgHKC"
 
     steps:
       - uses: actions/checkout@v2
