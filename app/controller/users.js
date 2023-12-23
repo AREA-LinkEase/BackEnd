@@ -1,4 +1,15 @@
-import { createUser, deleteUser, getAllUsers, getIdByUsername, getSelf, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
+import {
+    createUser,
+    deleteUser,
+    getAllUsers,
+    getIdByUsername,
+    getSelf,
+    getUserByEmail,
+    getUserById,
+    getUserByUsername,
+    searchUser,
+    updateUser
+} from "../model/users.js"
 import { checkPassword, hashPassword } from "../utils/hash_password.js"
 import jwt from "jsonwebtoken"
 import { Forbidden, InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
@@ -98,84 +109,113 @@ export default function index(app) {
      *       500:
      *         description: Internal Server Error
      */
-    app.get('/users/self', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
+    app.get('/users/@me', async (request, response) => {
         try {
-            const json = await getSelf(payload.id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
+            return response.status(200).json(response.locals.user)
         } catch (error) {
             return InternalError(response)
         }
     })
-    app.get('/users/username/:username', async (request, response) => {
-        let username = request.params.username
+    app.put('/users/@me', async (request, response) => {
+        try {
+            let body = request.body
 
-        try {
-            let json = await getIdByUsername(username)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users/:user_id', async (request, response) => {
-        let user_id = request.params.user_id
-
-        try {
-            let json = await getUserById(user_id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users', async (request, response) => {
-        try {
-            let json = await getAllUsers()
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.put('/users/:user_id', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let user_id = request.params.user_id
-        let body = request.body
-
-        if (user_id === undefined || body === undefined)
-            return UnprocessableEntity(response)
-        if (user_id !== payload.id)
-            return Forbidden(response)
-        if (body.password)
-            body.password = await hashPassword(body.password)
-        try {
-            let error = await updateUser(user_id, body)
+            if (body === undefined)
+                return UnprocessableEntity(response)
+            if (body.password)
+                body.password = await hashPassword(body.password)
+            let error = await updateUser(response.locals.user.id, body)
             if (error)
                 return NotFound(response)
             return response.status(200).json({result: "User changed successfully"})
-        } catch(error) {
-            InternalError(response)
+        } catch (error) {
+            console.log(error)
+            return InternalError(response)
         }
     })
-    app.delete('/users/:user_id', async (request, response) => {
-        let user_id = request.params.user_id
-        let payload = getPayload(request.headers.authorization)
-
-        if (user_id !== payload.id)
-            return Forbidden(response)
+    app.get('/users/@me/friends', async (request, response) => {
         try {
-            let error = await deleteUser(user_id)
-            if (error)
-                return NotFound(response)
-            return response.status(200).json({result: "User deleted successfully"})
+            let friends = response.locals.user.friends
+            let results = [];
+
+            for (const friend of friends) {
+                let user = await getUserById(friend);
+
+                if (user === null) continue;
+                results.push({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email
+                })
+            }
+            return response.status(200).json(results)
         } catch (error) {
-            console.log(error);
-            InternalError(response)
+            return InternalError(response)
+        }
+    })
+    app.post('/users/@me/friends', async (request, response) => {
+        let body = request.body;
+
+        if (body === undefined) return UnprocessableEntity(response);
+
+        let newFriends = body.friends;
+
+        if (newFriends === undefined || !Array.isArray(newFriends)) return UnprocessableEntity;
+
+        let friends = response.locals.user.friends
+
+        friends = [...friends, ...newFriends]
+
+        await updateUser(response.locals.user.id, {friends})
+
+        return response.status(200).json({result: "User changed successfully"})
+    })
+    app.delete('/users/@me/friends/:user_id', async (request, response) => {
+        let userId = parseInt(request.params.user_id);
+
+        if (userId === undefined || isNaN(userId)) return UnprocessableEntity(response);
+
+        let friends = response.locals.user.friends
+
+        if (friends.includes(userId)) {
+            friends.splice(friends.indexOf(userId), 1)
+            await updateUser(response.locals.user.id, {friends})
+        } else {
+            return NotFound(response)
+        }
+        return response.status(200).json({result: "User changed successfully"})
+    })
+    app.get('/users/search/:input', async (request, response) => {
+        try {
+            let input = request.params.input;
+            let users = await searchUser(input);
+            let results = [];
+
+            for (const user of users) {
+                results.push({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email
+                })
+            }
+            return response.status(200).json(results)
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.get('/users/:user_id', async (request, response) => {
+        try {
+            let userId = parseInt(request.params.user_id);
+            let user = await getUserById(userId);
+
+            if (user === null) return NotFound(response)
+            return response.status(200).json({
+                id: user.id,
+                username: user.username,
+                email: user.email
+            })
+        } catch (error) {
+            return InternalError(response)
         }
     })
 }
