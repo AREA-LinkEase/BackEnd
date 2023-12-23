@@ -13,6 +13,7 @@ export async function verifyToken(request, response, next) {
         if (Date.now() >= payload.exp * 1000) {
             return Forbidden(response)
         }
+        delete user.password
         response.locals.user = user
     } catch (e) {
         return Forbidden(response)
