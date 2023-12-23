@@ -7,8 +7,8 @@ export function getSequelize() {
     return sequelizeInstance;
 }
 
-async function feedDatabase(User, Automate, Workspace) {
-    // Create User
+async function feedDatabase(User, Automate, Workspace, Events, Services) {
+    // Reset all database
     User.destroy({
         where: {},
         truncate: true
@@ -21,10 +21,19 @@ async function feedDatabase(User, Automate, Workspace) {
         where: {},
         truncate: true
     })
+    Events.destroy({
+        where: {},
+        truncate: true
+    })
+    Services.destroy({
+        where: {},
+        truncate: true
+    })
+    // Create user
     User.create({
-        password: await hashPassword("test"),
-        email: "test@etest.com",
-        username: "test"
+        password: await hashPassword("user created with jest"),
+        email: "user@test.com",
+        username: "user_test"
     })
 }
 
@@ -56,10 +65,12 @@ export async function connectDatabase(isTest = false) {
         let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")
         let { Services } = await import("./model/services.js")
+        let { Events } = await import("./model/events.js")
         await User.sync()
         await Automate.sync()
         await Workspace.sync()
         await Services.sync()
+        await Events.sync()
         try {
             await sequelizeInstance.authenticate()
             console.log('Connexion à la base de données SQL établie avec succès.')
@@ -68,7 +79,7 @@ export async function connectDatabase(isTest = false) {
             throw new Error('Connexion à la base de données échouée')
         }
         if (isTest)
-            await feedDatabase(User, Automate, Workspace);
+            await feedDatabase(User, Automate, Workspace, Events, Services);
     }
     return sequelizeInstance
 }
