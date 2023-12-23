@@ -1,88 +1,87 @@
-import { DataTypes } from 'sequelize'
-import { getSequelize } from '../getDataBaseConnection.js'
+import {DataTypes} from 'sequelize'
+import {getSequelize} from '../getDataBaseConnection.js'
 
-const User = getSequelize().define('User', {
-        username: {
-            type: DataTypes.STRING,
-            allowNull: false,
+const User = getSequelize().define('users', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+    },
+    username: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    password: {
+        type: DataTypes.STRING,
+    },
+    services: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '[]',
+    },
+    friends: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '[]',
+    },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'default',
+        validate: {
+            isIn: [['google', 'discord', 'microsoft', 'default']],
         },
-        email: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
-        },
-        password: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        services: {
-            type: DataTypes.JSON,
-            allowNull: true
-        }
-    }, {
-        timestamps: false,
-    }
-)
+        comment: 'google | discord | microsoft | default',
+    },
+});
 
 export async function getAllUsers() {
-    const users = await User.findAll()
-    return users
+    return await User.findAll()
 }
 
 export async function getUserById(id) {
-    const user = await User.findOne({
+    return await User.findOne({
         where: {
             id: id
         },
     })
-    return user
-}
-
-export async function getIdByUsername(username) {
-    const user = await User.findOne({
-        where: {
-            username: username
-        },
-        attributes: ['id']
-    })
-    return user
-}
-
-export async function getSelf(id) {
-    const user = await User.findOne({
-        where: {
-            id: id
-        },
-    })
-    return user
 }
 
 export async function getUserByUsername(username) {
-    const user = await User.findOne({
+    return await User.findOne({
         where: {
             username: username
         }
     })
-    return user
 }
 
 export async function getUserByEmail(email) {
-    const user = await User.findOne({
+    return await User.findOne({
         where: {
             email: email
         }
     })
-    return user
 }
 
-export async function createUser(username, email, password, services) {
-    const newUser = await User.create({
+export async function createDefaultUser(username, email, password) {
+    return await User.create({
         username: username,
         email: email,
         password: password,
-        services: services
-    });
-    return newUser
+    })
+}
+
+export async function createServiceUser(username, email, type) {
+    return await User.create({
+        username: username,
+        email: email,
+        type: type,
+    })
 }
 
 export async function updateUser(id, changes) {

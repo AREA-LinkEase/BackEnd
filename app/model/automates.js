@@ -1,59 +1,57 @@
 import { DataTypes } from 'sequelize'
 import { getSequelize } from '../getDataBaseConnection.js'
+import {Workspace} from "./workspaces.js";
 
-const Automate = getSequelize().define('Automate', {
-        title: {
-            type: DataTypes.STRING,
-            allowNull: false
+const Automate = getSequelize().define('automates', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    is_private: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+    },
+    workspace_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Workspace,
+            key: 'id',
         },
-        workspace_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        trigger: {
-            type: DataTypes.INTEGER,
-            defaultValue: -1,
-            allowNull: false
-        },
-        trigger_option: {
-            type: DataTypes.STRING,
-            defaultValue: "",
-            allowNull: false
-        },
-        action: {
-            type: DataTypes.INTEGER,
-            defaultValue: -1,
-            allowNull: false
-        },
-        action_option: {
-            type: DataTypes.STRING,
-            defaultValue: "",
-            allowNull: false
-        },
-        workflow: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        variables: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        secrets: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        enabled: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: true
-        },
-        logs: {
-            type: DataTypes.JSON,
-            defaultValue: []
-        }
-    }, {
-        timestamps: false,
-    }
-)
+    },
+    workflow: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '{}',
+    },
+    variables: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '[]',
+    },
+    is_enabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+    },
+    views: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0,
+    },
+    logs: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '[]',
+    },
+});
 
 Automate.beforeUpdate((automate) => {
     if (automate.changed('workspace_id')) {
