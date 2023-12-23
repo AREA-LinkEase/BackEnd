@@ -35,11 +35,23 @@ const Workspace = getSequelize().define('workspaces', {
         allowNull: false,
         defaultValue: '[]',
         comment: '{id: user_id, permission: 0 | 1 | 2 | 3}',
+        get: function () {
+            return JSON.parse(this.getDataValue('users_id'));
+        },
+        set: function (value) {
+            this.setDataValue('users_id', JSON.stringify(value));
+        }
     },
     variables: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('variables'));
+        },
+        set: function (value) {
+            this.setDataValue('variables', JSON.stringify(value));
+        }
     },
     views: {
         type: DataTypes.BIGINT,

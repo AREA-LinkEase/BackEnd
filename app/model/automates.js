@@ -30,11 +30,23 @@ const Automate = getSequelize().define('automates', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '{}',
+        get: function () {
+            return JSON.parse(this.getDataValue('workflow'));
+        },
+        set: function (value) {
+            this.setDataValue('workflow', JSON.stringify(value));
+        }
     },
     variables: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('variables'));
+        },
+        set: function (value) {
+            this.setDataValue('variables', JSON.stringify(value));
+        }
     },
     is_enabled: {
         type: DataTypes.BOOLEAN,
@@ -50,6 +62,12 @@ const Automate = getSequelize().define('automates', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]',
+        get: function () {
+            return JSON.parse(this.getDataValue('logs'));
+        },
+        set: function (value) {
+            this.setDataValue('logs', JSON.stringify(value));
+        }
     },
 });
 
