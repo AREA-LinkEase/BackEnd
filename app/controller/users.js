@@ -1,114 +1,105 @@
 import {
-    createUser,
-    deleteUser,
-    getAllUsers,
-    getIdByUsername,
-    getSelf,
-    getUserByEmail,
     getUserById,
-    getUserByUsername,
     searchUser,
     updateUser
 } from "../model/users.js"
-import { checkPassword, hashPassword } from "../utils/hash_password.js"
-import jwt from "jsonwebtoken"
-import { Forbidden, InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
-import { getPayload } from "../utils/get_payload.js"
+import { hashPassword } from "../utils/hash_password.js"
+import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+
+/**
+ * @openapi
+ * /users:
+ *   get:
+ *     tags:
+ *       - users
+ *     security:
+ *       - bearerAuth: []
+ *     description: Get all users
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ * /users/{user_id}:
+ *   get:
+ *     tags:
+ *       - users
+ *     security:
+ *       - bearerAuth: []
+ *     description: Get user by id
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: the ID of the user to get
+ *     responses:
+ *       200:
+ *         description: Success
+ *       404:
+ *         description: Unknown user
+ *       500:
+ *         description: Internal Server Error
+ *   put:
+ *     tags:
+ *       - users
+ *     security:
+ *       - bearerAuth: []
+ *     description: Update user by ID
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: the ID of the user to update
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *       403:
+ *         description: Forbidden Request
+ *       404:
+ *         description: Unknown workspace_id or automate_id
+ *       422:
+ *         description: Unprocessable Entity
+ *       500:
+ *         description: Error
+ *   delete:
+ *     tags:
+ *       - users
+ *     security:
+ *       - bearerAuth: []
+ *     description: Delete user by id
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: the ID of the user to delete
+ *     responses:
+ *       200:
+ *         description: Success
+ *       404:
+ *         description: Unknown user
+ *       500:
+ *         description: Internal Server Error
+ */
 
 export default function index(app) {
-
-    /**
-     * @openapi
-     * /users:
-     *   get:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get all users
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     * /users/{user_id}:
-     *   get:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get user by id
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to get
-     *     responses:
-     *       200:
-     *         description: Success
-     *       404:
-     *         description: Unknown user
-     *       500:
-     *         description: Internal Server Error
-     *   put:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Update user by ID
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to update
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *               email:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden Request
-     *       404:
-     *         description: Unknown workspace_id or automate_id
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Error
-     *   delete:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Delete user by id
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to delete
-     *     responses:
-     *       200:
-     *         description: Success
-     *       404:
-     *         description: Unknown user
-     *       500:
-     *         description: Internal Server Error
-     */
     app.get('/users/@me', async (request, response) => {
         try {
             return response.status(200).json(response.locals.user)
