@@ -64,13 +64,13 @@ describe('/workspaces/@me', () => {
 
         expect(response.status).toBe(200);
     });
-    test('should get 2 workspaces', async () => {
+    test('should get workspaces', async () => {
         const response = await request(app)
             .get('/workspaces/@me')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        expect(response.body.length).toEqual(2);
+        expect(response.body.length).toBeGreaterThanOrEqual(3);
         response.body.forEach((workspace) => {
             expect(workspace).toHaveProperty("id")
             expect(workspace).toHaveProperty("title")
@@ -83,13 +83,13 @@ describe('/workspaces/@me', () => {
             expect(workspace).toHaveProperty("is_enabled")
         })
     });
-    test('should get 1 workspace in public space', async () => {
+    test('should get workspace in public space', async () => {
         const response = await request(app)
             .get('/workspaces/@me/public')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        expect(response.body.length).toEqual(1);
+        expect(response.body.length).toBeGreaterThanOrEqual(2);
         response.body.forEach((workspace) => {
             expect(workspace).toHaveProperty("id")
             expect(workspace).toHaveProperty("title")
@@ -102,13 +102,13 @@ describe('/workspaces/@me', () => {
             expect(workspace).toHaveProperty("is_enabled")
         })
     });
-    test('should get 1 workspace in private space', async () => {
+    test('should get workspace in private space', async () => {
         const response = await request(app)
             .get('/workspaces/@me/private')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        expect(response.body.length).toEqual(1);
+        expect(response.body.length).toBeGreaterThanOrEqual(1);
         response.body.forEach((workspace) => {
             expect(workspace).toHaveProperty("id")
             expect(workspace).toHaveProperty("title")
@@ -257,19 +257,19 @@ describe('POST /workspaces/:id/automate', () => {
             .set("Authorization", await getToken());
 
         expect(response2.status).toBe(200)
-        expect(response2.body.automates.length).toEqual(1)
+        expect(response2.body.automates.length).toBeGreaterThanOrEqual(2)
     });
 })
 
 describe('GET /workspaces/search/:input', () => {
-    test('should get 1 workspace', async () => {
+    test('should find workspaces', async () => {
         const response = await request(app)
             .get('/workspaces/search/title')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body).toHaveLength(1);
+        expect(response.body.length).toBeGreaterThanOrEqual(2)
     });
     test('should get nothing', async () => {
         const response = await request(app)

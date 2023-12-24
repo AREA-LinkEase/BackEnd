@@ -15,6 +15,21 @@ async function feedDatabase(User, Automate, Workspace, Events, Services) {
         email: "user@test.com",
         username: "user_test"
     })
+    // Create workspace
+    await Workspace.create({
+        title: "base title",
+        description: "a description",
+        is_private: false,
+        users_id: [],
+        owner_id: 1
+    })
+    // Create automate
+    await Automate.create({
+        title: "An automate",
+        is_private: false,
+        workspace_id: 1,
+        logs: ["test"]
+    })
 }
 
 export async function connectDatabase(isTest = false) {
