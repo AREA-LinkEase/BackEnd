@@ -1,11 +1,16 @@
 import request from 'supertest';
 import { app } from '../../config/express.js';
 import {setupTest} from "../../testBase.js";
-import {beforeAll, describe, expect, test} from '@jest/globals';
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
+import {getSequelize} from "../../app/getDataBaseConnection.js";
 
 beforeAll(async () => {
     await setupTest()
 });
+
+afterAll(async () => {
+    await getSequelize().close()
+})
 
 let token = null;
 
@@ -19,6 +24,7 @@ async function getToken() {
         .post('/auth/login')
         .send(userData)
         .set('Accept', 'application/json')
+    expect(response.status).toBe(200)
     expect(response.body.jwt).toBeDefined()
     token = response.body.jwt;
     return token
