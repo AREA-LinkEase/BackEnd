@@ -42,4 +42,38 @@ const Events = getSequelize().define('events', {
     },
 });
 
+export async function getTriggersByServiceId(id) {
+    return Events.findAll({
+        where: {
+            service_id: id,
+            type: "trigger"
+        }
+    })
+}
+
+export async function getActionsByServiceId(id) {
+    return Events.findAll({
+        where: {
+            service_id: id,
+            type: "action"
+        }
+    })
+}
+
+export async function getEventById(id) {
+    return Events.findOne({
+        where: {
+            id: id
+        }
+    })
+}
+
+export async function createEvent(name, type, service_id) {
+    await Events.create({
+        name,
+        type,
+        service_id
+    })
+}
+
 export { Events }
