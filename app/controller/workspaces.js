@@ -378,8 +378,8 @@ export default function index(app) {
             let body = request.body
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id && user.permission < 1))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
             if (!("content" in body) || typeof body["content"] !== "string")
                 return UnprocessableEntity(response)
@@ -399,8 +399,8 @@ export default function index(app) {
             let user_id = response.locals.user.id
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id && user.permission < 1))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
             let variables = workspace.variables;
             delete variables[name]
@@ -418,8 +418,8 @@ export default function index(app) {
             let user_id = response.locals.user.id
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id && user.permission < 1))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
                 return Forbidden(response)
             let users_id = workspace.users_id;
             users_id = users_id.filter(userId => userId.id !== other_user_id)
@@ -437,8 +437,8 @@ export default function index(app) {
             let body = request.body
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id && user.permission < 1))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
                 return Forbidden(response)
             if (!("permission" in body) || !("id" in body) || typeof body.permission !== "number" || typeof body.id !== "number")
                 return UnprocessableEntity(response)
@@ -464,8 +464,8 @@ export default function index(app) {
             let body = request.body
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
             if (!['title', 'is_private'].every((property) => body[property] !== undefined))
                 return UnprocessableEntity(response)
@@ -507,8 +507,8 @@ export default function index(app) {
             let body = request.body
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.is_private && workspace.owner_id !== user_id &&
-                workspace.users_id.every(user => user.id !== user_id && user.permission < 1))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
                 return Forbidden(response)
             if (!Object.keys(body).every((value) => ["title", "description", "is_private", "is_enabled"].includes(value)))
                 return UnprocessableEntity(response)

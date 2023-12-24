@@ -1,4 +1,4 @@
-import {DataTypes} from 'sequelize'
+import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {Workspace} from "./workspaces.js";
 
@@ -40,7 +40,7 @@ const Automate = getSequelize().define('automates', {
     variables: {
         type: DataTypes.TEXT,
         allowNull: false,
-        defaultValue: '[]',
+        defaultValue: '{}',
         get: function () {
             return JSON.parse(this.getDataValue('variables'));
         },
@@ -71,17 +71,6 @@ const Automate = getSequelize().define('automates', {
     },
 });
 
-Automate.beforeUpdate((automate) => {
-    if (automate.changed('workspace_id')) {
-        throw new Error('Workspace ID cannot be updated.');
-    }
-})
-
-export async function getAllAutomates() {
-    const automates = await Automate.findAll()
-    return automates
-}
-
 export async function getAutomatesByWorkspace(workspace_id) {
     return await Automate.findAll({
         where: {
@@ -91,12 +80,11 @@ export async function getAutomatesByWorkspace(workspace_id) {
 }
 
 export async function getAutomateById(id) {
-    const automate = await Automate.findOne({
+    return await Automate.findOne({
         where: {
             id: id
         }
     })
-    return automate
 }
 
 export async function createAutomate(title, is_private, workspace_id) {
@@ -107,20 +95,14 @@ export async function createAutomate(title, is_private, workspace_id) {
     })
 }
 
-export async function updateAutomate(id, changes) {
-    const automate = await getAutomateById(id)
-    if (automate === null)
-        return true
-    await automate.update(changes)
-    return false
-}
-
-export async function deleteAutomate(automate_id) {
-    const automate = await getAutomateById(automate_id)
-    if (automate === null)
-        return true
-    await automate.destroy()
-    return false
+export async function searchAutomates(input) {
+    return Automate.findAll({
+        where: {
+            title: {
+                [Op.like]: `%${input}%`
+            }
+        }
+    })
 }
 
 export { Automate }

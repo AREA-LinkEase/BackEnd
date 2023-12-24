@@ -2,109 +2,125 @@ import request from 'supertest';
 import { app } from '../../config/express.js';
 import {setupTest} from "../../testBase.js";
 import {getSequelize} from "../../app/getDataBaseConnection.js";
-import { expect } from '@jest/globals';
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
 
 beforeAll(async () => {
     await setupTest()
 });
 
-let id;
+afterAll(async () => {
+    await getSequelize().close()
+})
+
 let token = null;
 
 async function getToken() {
     if (token) return token;
     const userData = {
-        username: "test",
-        password: "test",
+        username: "user_test",
+        password: "user created with jest",
     }
     const response = await request(app)
-        .post('/login')
-        .set('Accept', 'application/json')
+        .post('/auth/login')
         .send(userData)
-    token = "Bearer " + response.body.jwt;
+        .set('Accept', 'application/json')
+    expect(response.status).toBe(200)
+    expect(response.body.jwt).toBeDefined()
+    token = response.body.jwt;
     return token
 }
 
-describe('POST /automates', () => {
-    test('should create a new automate', async () => {
-        const workspaceData = {
-            title: "automate_test",
-            workspace_id: 1,
-            workflow: {},
-            variables: {},
-            secrets: {}
-        }
+describe('/automates/:id', () => {
+    test('should get information of automate', async () => {
+        const response = await request(app).get('/automates/1').set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('id');
+        expect(response.body).toHaveProperty('title');
+        expect(response.body).toHaveProperty('is_private');
+        expect(response.body).toHaveProperty('workspace_id');
+        expect(response.body).toHaveProperty('is_enabled');
+        expect(response.body).toHaveProperty('views');
+        expect(response.body).toHaveProperty('workflow');
+    });
+    test('should edit title of automate', async () => {
         const response = await request(app)
-            .post('/automates')
-            .send(workspaceData)
-            .set('Accept', 'application/json').set("Authorization", await getToken());
+            .put('/automates/1')
+            .send({
+                title: "new title"
+            })
+            .set("Authorization", await getToken());
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
+        const response2 = await request(app).get('/automates/1').set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200);
+        expect(response2.body.title).toEqual("new title")
     });
-    test('should return 401', async () => {
-        const workspaceData = {
-            title: "automate_test",
-            workspace_id: 1,
-            workflow: {},
-            variables: {},
-            secrets: {}
-        }
+    test('should edit workflow', async () => {
         const response = await request(app)
-            .post('/automates')
-            .send(workspaceData)
-            .set('Accept', 'application/json');
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('GET /automates', () => {
-    test('should get all automates', async () => {
-        const response = await request(app).get('/automates').set("Authorization", await getToken());
-        
-        id = response.body.result[response.body.result.length - 1].id
-        expect(response.status).toBe(200);
-        response.body.result.forEach(automate => {
-            expect(automate).toHaveProperty('title');
-            expect(automate).toHaveProperty('workspace_id');
-            expect(automate).toHaveProperty('workflow');
-            expect(automate).toHaveProperty('variables');
-            expect(automate).toHaveProperty('secrets');
-        });
-    });
-    test('should return 401', async () => {
-        const response = await request(app).get('/automates');
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('GET /automates/{automate_id}', () => {
-    test('should get a automate by ID', async () => {
-        const response = await request(app).get(`/automates/${id}`).set("Authorization", await getToken());
+            .put('/automates/1/workflow')
+            .send({
+                workflow: {"test": "test"}
+            })
+            .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        expect(response.body.result).toHaveProperty('title');
-        expect(response.body.result).toHaveProperty('workspace_id');
-        expect(response.body.result).toHaveProperty('workflow');
-        expect(response.body.result).toHaveProperty('variables');
-        expect(response.body.result).toHaveProperty('secrets');
-    });
-    test('should return 401', async () => {
-        const response = await request(app).get(`/automates/${id}`);
+        const response2 = await request(app).get('/automates/1').set("Authorization", await getToken());
 
-        expect(response.status).toBe(401);
+        expect(response2.status).toBe(200);
+        expect(response2.body.workflow).toHaveProperty("test")
     });
-});
+    test('should get logs of the automate', async () => {
+        const response = await request(app)
+            .get('/automates/1/logs')
+            .set("Authorization", await getToken());
 
-describe('DELETE /automates/{automate_id}', () => {
-    test('should delete a automate by ID', async () => {
-        const response = await request(app).delete(`/automates/${id}`).set("Authorization", await getToken());
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true)
+        expect(response.body).toHaveLength(1)
+    });
+    test('should clear logs of the automate', async () => {
+        const response = await request(app)
+            .delete('/automates/1/logs')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/automates/1/logs')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200);
+        expect(Array.isArray(response2.body)).toBe(true)
+        expect(response2.body).toHaveLength(0)
+    });
+    test('should find an automate', async () => {
+        const response = await request(app)
+            .get('/automates/search/new')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true)
+        expect(response.body).toHaveLength(1)
+    });
+    test('should delete an automate', async () => {
+        const response = await request(app)
+            .delete('/automates/1')
+            .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
     });
-    test('should return 401', async () => {
-        const response = await request(app).delete(`/automates/${id}`);
+    test('should find nothing', async () => {
+        const response = await request(app)
+            .get('/automates/search/new')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true)
+        expect(response.body).toHaveLength(0)
+    });
+    test('should response 401', async () => {
+        const response = await request(app).get('/automates/1');
 
         expect(response.status).toBe(401);
     });
