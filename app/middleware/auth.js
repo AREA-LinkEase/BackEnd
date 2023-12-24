@@ -25,4 +25,5 @@ export function executeAuthMiddleware(app) {
     app.use('/users/', verifyToken)
     app.use('/workspaces/', verifyToken)
     app.use('/automates/', verifyToken)
+    app.use('/services/', verifyToken)
 }

@@ -1,6 +1,7 @@
-import { DataTypes } from 'sequelize'
-import { getSequelize } from '../getDataBaseConnection.js'
+import {DataTypes, Op} from 'sequelize'
+import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
+import {Workspace} from "./workspaces.js";
 
 const Services = getSequelize().define('services', {
     id: {
@@ -60,21 +61,59 @@ const Services = getSequelize().define('services', {
 });
 
 export async function getServicesById(id) {
-    const service = await Services.findOne({
+    return await Services.findOne({
         where: {
             id: id
         }
     })
-    return service
+}
+
+export async function createService(name, client_id, client_secret, scope, auth_url, token_url, owner_id, is_private) {
+    await Services.create({
+        name,
+        client_id,
+        client_secret,
+        scope,
+        auth_url,
+        token_url,
+        owner_id,
+        is_private
+    })
+}
+
+export async function getAllServices() {
+    return Services.findAll();
+}
+
+export async function getAllPublicServices() {
+    return Services.findAll({
+        where: {
+            is_private: false
+        }
+    })
+}
+
+export async function getAllServicesById(id) {
+    let services = await Services.findAll();
+    return services.filter((service) => service.owner_id === id || service.users_id.includes(id))
 }
 
 export async function getServiceByName(name) {
-    const service = await Services.findOne({
+    return await Services.findOne({
         where: {
             name: name
         }
     })
-    return service
+}
+
+export async function searchServices(input) {
+    return Services.findAll({
+        where: {
+            name: {
+                [Op.like]: `%${input}%`
+            }
+        }
+    })
 }
 
 export { Services }
