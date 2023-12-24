@@ -113,16 +113,21 @@ export async function deleteUser(user_id) {
 }
 
 export async function searchUser(input) {
-    return User.findAll({
+    let part1 = await User.findAll({
         where: {
             email: {
                 [Op.like]: `%${input}%`
-            },
+            }
+        }
+    })
+    let part2 = await User.findAll({
+        where: {
             username: {
                 [Op.like]: `%${input}%`
             }
         }
     })
+    return [...part1, ...part2]
 }
 
 export { User }

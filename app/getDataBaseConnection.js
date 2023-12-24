@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize'
 import {hashPassword} from "./utils/hash_password.js";
+import * as fs from 'fs'
 
 let sequelizeInstance = null;
 
@@ -8,29 +9,8 @@ export function getSequelize() {
 }
 
 async function feedDatabase(User, Automate, Workspace, Events, Services) {
-    // Reset all database
-    User.destroy({
-        where: {},
-        truncate: true
-    })
-    Automate.destroy({
-        where: {},
-        truncate: true
-    })
-    Workspace.destroy({
-        where: {},
-        truncate: true
-    })
-    Events.destroy({
-        where: {},
-        truncate: true
-    })
-    Services.destroy({
-        where: {},
-        truncate: true
-    })
     // Create user
-    User.create({
+    await User.create({
         password: await hashPassword("user created with jest"),
         email: "user@test.com",
         username: "user_test"
@@ -39,6 +19,13 @@ async function feedDatabase(User, Automate, Workspace, Events, Services) {
 
 export async function connectDatabase(isTest = false) {
     if (!sequelizeInstance) {
+        if (isTest) {
+            try {
+                fs.rmSync("./test.sqlite", {force: true})
+            } catch (e) {
+                console.log(e)
+            }
+        }
         if (process.env.DIALECT === 'sqlite' || process.env.DIALECT === undefined) {
             sequelizeInstance = new Sequelize({
                 dialect: 'sqlite',
@@ -56,11 +43,7 @@ export async function connectDatabase(isTest = false) {
                 }
             )
         }
-        if (isTest) {
-            await sequelizeInstance.sync({ force: true });
-        } else {
-            await sequelizeInstance.sync()
-        }
+        await sequelizeInstance.sync()
         let { User } = await import("./model/users.js");
         let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")

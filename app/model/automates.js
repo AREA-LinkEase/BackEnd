@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize'
-import { getSequelize } from '../getDataBaseConnection.js'
+import {DataTypes} from 'sequelize'
+import {getSequelize} from '../getDataBaseConnection.js'
 import {Workspace} from "./workspaces.js";
 
 const Automate = getSequelize().define('automates', {
@@ -82,13 +82,12 @@ export async function getAllAutomates() {
     return automates
 }
 
-export async function getAutomatesByWorkpace(workspace_id) {
-    const automates = await Automate.findAll({
+export async function getAutomatesByWorkspace(workspace_id) {
+    return await Automate.findAll({
         where: {
             workspace_id: workspace_id
         }
     })
-    return automates
 }
 
 export async function getAutomateById(id) {
@@ -100,15 +99,12 @@ export async function getAutomateById(id) {
     return automate
 }
 
-export async function createAutomate(title, workspace_id, workflow, variables, secrets) {
-    const newAutomate = await Automate.create({
-        title: title,
-        workspace_id: workspace_id,
-        workflow: workflow,
-        variables: variables,
-        secrets: secrets
-    });
-    return newAutomate
+export async function createAutomate(title, is_private, workspace_id) {
+    return await Automate.create({
+        title,
+        is_private,
+        workspace_id
+    })
 }
 
 export async function updateAutomate(id, changes) {
