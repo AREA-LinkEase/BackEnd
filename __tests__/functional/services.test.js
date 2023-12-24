@@ -164,6 +164,111 @@ describe('test service first connection process', () => {
     })
 })
 
+describe('Create event', () => {
+    test('should create an action', async () => {
+        const response = await request(app)
+            .post('/services/1/events')
+            .send({
+                "name": "testAction",
+                "type": "action"
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+    });
+    test("should get services' actions", async () => {
+        const response = await request(app)
+            .get('/services/1/actions')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body.length).toBeGreaterThanOrEqual(1);
+        response.body.forEach((action) => {
+            expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("service_id")
+            expect(action).toHaveProperty("id")
+            expect(action).toHaveProperty("workflow")
+            expect(action).toHaveProperty("type")
+            expect(action["type"]).toBe("action")
+        })
+    });
+    test('should create an trigger', async () => {
+        const response = await request(app)
+            .post('/services/1/events')
+            .send({
+                "name": "testTrigger",
+                "type": "trigger"
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+    });
+    test("should get services' triggers", async () => {
+        const response = await request(app)
+            .get('/services/1/triggers')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body.length).toBeGreaterThanOrEqual(1);
+        response.body.forEach((action) => {
+            expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("service_id")
+            expect(action).toHaveProperty("id")
+            expect(action).toHaveProperty("workflow")
+            expect(action).toHaveProperty("type")
+            expect(action["type"]).toBe("trigger")
+        })
+    });
+    test('should update an event', async () => {
+        const response = await request(app)
+            .put('/services/1/events/1')
+            .send({
+                "name": "new title for trigger"
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/services/1/actions')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200);
+        expect(Array.isArray(response2.body)).toBe(true);
+        expect(response2.body.length).toBeGreaterThanOrEqual(1);
+        let exist = false;
+        response2.body.forEach((action) => {
+            if (action.name === "new title for trigger")
+                exist = true;
+        })
+        expect(exist).toBe(true)
+    });
+    test('should delete an event', async () => {
+        const response = await request(app)
+            .delete('/services/1/events/1')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .delete('/services/1/events/2')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200);
+    });
+})
+
+describe('Get triggers and actions', () => {
+    test('should get users in service', async () => {
+        const response = await request(app)
+            .get('/services/1/users')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+})
+
 describe('search service and delete service', () => {
     test('should find a service', async () => {
         const response = await request(app)

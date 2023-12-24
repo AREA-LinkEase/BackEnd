@@ -2,6 +2,7 @@ import {createService, getAllServicesById, getServicesById, searchServices} from
 import {getUserById, updateUser} from "../model/users.js";
 import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
+import {createEvent, getActionsByServiceId, getEventById, getTriggersByServiceId} from "../model/events.js";
 
 /**
  * @openapi
@@ -197,6 +198,98 @@ export default function index(app) {
                 users_id.push(id)
             service.update({users_id})
             return response.status(200).json({result: "Service has been deleted successfully"})
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.get('/services/:id/triggers', async (request, response) => {
+        try {
+            let service_id = parseInt(request.params.id);
+            let service = await getServicesById(service_id);
+            let user_id = response.locals.user.id;
+            if (service === null)
+                return NotFound(response)
+            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+                return Forbidden(response)
+            let triggers = await getTriggersByServiceId(service_id)
+            return response.status(200).json(triggers)
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.get('/services/:id/actions', async (request, response) => {
+        try {
+            let service_id = parseInt(request.params.id);
+            let service = await getServicesById(service_id);
+            let user_id = response.locals.user.id;
+            if (service === null)
+                return NotFound(response)
+            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+                return Forbidden(response)
+            let actions = await getActionsByServiceId(service_id)
+            return response.status(200).json(actions)
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.post('/services/:id/events', async (request, response) => {
+        try {
+            let service_id = parseInt(request.params.id);
+            let service = await getServicesById(service_id);
+            let user_id = response.locals.user.id;
+            let body = request.body;
+            if (service === null)
+                return NotFound(response)
+            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+                return Forbidden(response)
+            if (!("name" in body) || !("type" in body) || typeof body["name"] !== "string")
+                return UnprocessableEntity(response)
+            if (body["type"] !== "trigger" && body["type"] !== "action")
+                return UnprocessableEntity(response)
+            await createEvent(body["name"], body["type"], service_id)
+            return response.status(200).json({result: "Event has been created successfully"})
+        } catch (error) {
+            console.log(error)
+            return InternalError(response)
+        }
+    })
+    app.put('/services/:id/events/:event_id', async (request, response) => {
+        try {
+            let service_id = parseInt(request.params.id);
+            let event_id = parseInt(request.params.event_id);
+            let service = await getServicesById(service_id);
+            let user_id = response.locals.user.id;
+            let body = request.body;
+            if (service === null)
+                return NotFound(response)
+            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+                return Forbidden(response)
+            if (!Object.keys(body).every((value) => ["name", "workflow"].includes(value)))
+                return UnprocessableEntity(response)
+            let event = await getEventById(event_id)
+            if (event === null)
+                return NotFound(response)
+            await event.update(body)
+            return response.status(200).json({result: "Event has been created successfully"})
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.delete('/services/:id/events/:event_id', async (request, response) => {
+        try {
+            let service_id = parseInt(request.params.id);
+            let event_id = parseInt(request.params.event_id);
+            let service = await getServicesById(service_id);
+            let user_id = response.locals.user.id;
+            if (service === null)
+                return NotFound(response)
+            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+                return Forbidden(response)
+            let event = await getEventById(event_id)
+            if (event === null)
+                return NotFound(response)
+            await event.destroy()
+            return response.status(200).json({result: "Event has been created successfully"})
         } catch (error) {
             return InternalError(response)
         }
