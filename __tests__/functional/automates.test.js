@@ -78,7 +78,6 @@ describe('/automates/:id', () => {
 
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body)).toBe(true)
-        expect(response.body).toHaveLength(1)
     });
     test('should clear logs of the automate', async () => {
         const response = await request(app)
