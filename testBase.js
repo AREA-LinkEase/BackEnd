@@ -15,6 +15,9 @@ export async function setupTest() {
     import('./app/middleware/auth.js').then(({ executeAuthMiddleware }) => {
         executeAuthMiddleware(app)
     });
+    import('./app/middleware/worker.js').then(({ executeWorkerMiddleware }) => {
+        executeWorkerMiddleware(app)
+    });
     await connectDatabase(true);
     index(app, "default")
 }

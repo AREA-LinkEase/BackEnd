@@ -35,6 +35,9 @@ connectDatabase().then(() => {
     import('./app/middleware/auth.js').then(({ executeAuthMiddleware }) => {
         executeAuthMiddleware(app)
     });
+    import('./app/middleware/worker.js').then(({ executeWorkerMiddleware }) => {
+        executeWorkerMiddleware(app)
+    });
     io.on("connection", function (socket) {
         users.push(socket)
         import('./core/controller/controller.js').then((controller) => {

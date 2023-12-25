@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PRIVATE_KEY: "MIICWgIBAAKBgHKC"
+      WORKER_KEY: "B5)[GQ!q-XXpB#@k%n4OK]g}P#1~h;Fp8i2^Fc'9-NXas}'a^="
 
     steps:
       - uses: actions/checkout@v2
