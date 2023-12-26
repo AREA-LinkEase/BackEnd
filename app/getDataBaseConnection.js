@@ -4,11 +4,21 @@ import * as fs from 'fs'
 
 let sequelizeInstance = null;
 
+/**
+ * Get the singleton instance of the Sequelize connection.
+ * @returns {Sequelize | null} The Sequelize instance or null if not connected.
+ */
 export function getSequelize() {
     return sequelizeInstance;
 }
 
-async function feedDatabase(User, Automate, Workspace, Events, Services) {
+/**
+ * Feed the database with initial data for testing purposes.
+ * @param {Model} User - The User model.
+ * @param {Model} Automate - The Automate model.
+ * @param {Model} Workspace - The Workspace model.
+ */
+async function feedDatabase(User, Automate, Workspace) {
     // Create user
     await User.create({
         password: await hashPassword("user created with jest"),
@@ -32,6 +42,12 @@ async function feedDatabase(User, Automate, Workspace, Events, Services) {
     })
 }
 
+/**
+ * Connect to the database using Sequelize.
+ * @param {boolean} isTest - Indicates whether the connection is for testing purposes.
+ * @returns {Promise<Sequelize>} The Sequelize instance.
+ * @throws Will throw an error if the connection fails.
+ */
 export async function connectDatabase(isTest = false) {
     if (!sequelizeInstance) {
         if (isTest) {
