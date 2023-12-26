@@ -2,6 +2,19 @@ import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
 
+/**
+ * @typedef {Object} WorkspaceModel
+ * @property {number} id - Unique identifier for the workspace.
+ * @property {string} title - Title of the workspace.
+ * @property {string} description - Description of the workspace.
+ * @property {boolean} is_private - Indicates whether the workspace is private or not.
+ * @property {number} owner_id - User ID of the owner of the workspace.
+ * @property {string} users_id - JSON string representing an array of users and their permissions.
+ * @property {string} variables - JSON string representing variables associated with the workspace.
+ * @property {number} views - Number of views the workspace has.
+ * @property {boolean} is_enabled - Indicates whether the workspace is enabled or not.
+ */
+
 const Workspace = getSequelize().define('workspaces', {
     id: {
         type: DataTypes.INTEGER,
@@ -65,6 +78,11 @@ const Workspace = getSequelize().define('workspaces', {
     },
 });
 
+/**
+ * Gets all workspaces owned by a specific user.
+ * @param {number} user_id - User ID to filter workspaces.
+ * @returns {Promise<WorkspaceModel[]>} - A promise resolving to an array of workspaces.
+ */
 export async function getAllWorkspaces(user_id) {
     const result = await Workspace.findAll({
         where: {
@@ -80,6 +98,11 @@ export async function getAllWorkspaces(user_id) {
     return result
 }
 
+/**
+ * Gets a workspace by its ID.
+ * @param {number} id - ID of the workspace.
+ * @returns {Promise<WorkspaceModel|null>} - A promise resolving to the found workspace or null if not found.
+ */
 export async function getWorkspaceById(id) {
     return await Workspace.findOne({
         where: {
@@ -88,6 +111,15 @@ export async function getWorkspaceById(id) {
     })
 }
 
+/**
+ * Creates a new workspace.
+ * @param {string} title - Title of the new workspace.
+ * @param {string} description - Description of the new workspace.
+ * @param {boolean} is_private - Indicates whether the new workspace is private or not.
+ * @param {string} users_id - JSON string representing an array of users and their permissions.
+ * @param {number} owner_id - User ID of the owner of the new workspace.
+ * @returns {Promise<WorkspaceModel>} - A promise resolving to the created workspace.
+ */
 export async function createWorkspace(title, description, is_private, users_id, owner_id) {
     return await Workspace.create({
         title: title,
@@ -98,6 +130,11 @@ export async function createWorkspace(title, description, is_private, users_id, 
     })
 }
 
+/**
+ * Searches for workspaces with a given title.
+ * @param {string} input - The search input to match against workspace titles.
+ * @returns {Promise<WorkspaceModel[]>} - A promise resolving to an array of matching workspaces.
+ */
 export async function searchWorkspaces(input) {
     return Workspace.findAll({
         where: {

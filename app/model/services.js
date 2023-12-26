@@ -1,7 +1,20 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
-import {Workspace} from "./workspaces.js";
+
+/**
+ * @typedef {Object} ServiceAttributes
+ * @property {number} id - Primary key, auto-incremented integer.
+ * @property {string} name - Name of the service.
+ * @property {string} client_id - Client ID for authentication.
+ * @property {string} client_secret - Client secret for authentication.
+ * @property {string} scope - Scope of the service.
+ * @property {string} auth_url - Authentication URL.
+ * @property {string} token_url - Token URL.
+ * @property {number} owner_id - Foreign key referencing the User model.
+ * @property {string[]} users_id - Array of user IDs associated with the service.
+ * @property {boolean} is_private - Indicates if the service is private.
+ */
 
 const Services = getSequelize().define('services', {
     id: {
@@ -60,6 +73,11 @@ const Services = getSequelize().define('services', {
     },
 });
 
+/**
+ * Retrieves a service by its ID.
+ * @param {number} id - The ID of the service.
+ * @returns {Promise<ServiceAttributes|null>} - The found service or null if not found.
+ */
 export async function getServicesById(id) {
     return await Services.findOne({
         where: {
@@ -68,6 +86,18 @@ export async function getServicesById(id) {
     })
 }
 
+/**
+ * Creates a new service.
+ * @param {string} name - Name of the service.
+ * @param {string} client_id - Client ID for authentication.
+ * @param {string} client_secret - Client secret for authentication.
+ * @param {string} scope - Scope of the service.
+ * @param {string} auth_url - Authentication URL.
+ * @param {string} token_url - Token URL.
+ * @param {number} owner_id - The ID of the owner user.
+ * @param {boolean} is_private - Indicates if the service is private.
+ * @returns {Promise<void>} - A promise that resolves when the service is created.
+ */
 export async function createService(name, client_id, client_secret, scope, auth_url, token_url, owner_id, is_private) {
     await Services.create({
         name,
@@ -81,10 +111,18 @@ export async function createService(name, client_id, client_secret, scope, auth_
     })
 }
 
+/**
+ * Retrieves all services.
+ * @returns {Promise<ServiceAttributes[]>} - An array of all services.
+ */
 export async function getAllServices() {
     return Services.findAll();
 }
 
+/**
+ * Retrieves all public services.
+ * @returns {Promise<ServiceAttributes[]>} - An array of public services.
+ */
 export async function getAllPublicServices() {
     return Services.findAll({
         where: {
@@ -93,11 +131,21 @@ export async function getAllPublicServices() {
     })
 }
 
+/**
+ * Retrieves all services associated with a user by ID.
+ * @param {number} id - The ID of the user.
+ * @returns {Promise<Model[]>} - An array of services associated with the user.
+ */
 export async function getAllServicesById(id) {
     let services = await Services.findAll();
     return services.filter((service) => service.owner_id === id || service.users_id.includes(id))
 }
 
+/**
+ * Retrieves a service by its name.
+ * @param {string} name - The name of the service.
+ * @returns {Promise<ServiceAttributes|null>} - The found service or null if not found.
+ */
 export async function getServiceByName(name) {
     return await Services.findOne({
         where: {
@@ -106,6 +154,11 @@ export async function getServiceByName(name) {
     })
 }
 
+/**
+ * Searches for services by name.
+ * @param {string} input - The search input.
+ * @returns {Promise<ServiceAttributes[]>} - An array of services matching the search criteria.
+ */
 export async function searchServices(input) {
     return Services.findAll({
         where: {
