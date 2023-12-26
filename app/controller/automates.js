@@ -6,177 +6,298 @@ import {getWorkspaceById} from "../model/workspaces.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
 
 /**
- * @openapi
- * /automates:
- *   post:
- *     tags:
- *       - automates
- *     description: Create a new automate
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               workspace_id:
- *                 type: integer
- *               workflow:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
- *               variables:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
- *               secrets:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
- *     responses:
- *       201:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Unknown workspace_id
- *       422:
- *         description: Missing field
- *       500:
- *         description: Error
- * /automates/{workspace_id}:
+ * @swagger
+ * tags:
+ *   name: Automates
+ *   description: Operations related to automates
+ *
+ *
+ * /automates/search/{input}:
  *   get:
- *     tags:
- *       - automates
- *     description: Get automate by id
- *     security:
- *       - bearerAuth: []
+ *     summary: Search automates by input
+ *     tags: [Automates]
  *     parameters:
  *       - in: path
- *         name: workspace_id
- *         required: true
+ *         name: input
  *         schema:
- *           type: integer
- *         description: the ID of the workspace of the automate
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Unknown workspace_id or automate_id
- *       500:
- *         description: Error
- * /automates/{workspace_id}/{automate_id}:
- *   get:
- *     tags:
- *       - automates
- *     description: Get automate by id
+ *           type: string
+ *         required: true
+ *         description: The search input
  *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the workspace of the automate
- *       - in: path
- *         name: automate_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the automate to get
+ *       - BearerAuth: []
  *     responses:
- *       200:
- *         description: Success
- *       403:
+ *       '200':
+ *         description: Successful search
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   workflow:
+ *                     type: string
+ *                   workspace_id:
+ *                     type: integer
+ *                   views:
+ *                     type: integer
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
  *         description: Forbidden
- *       404:
- *         description: Unknown workspace_id or automate_id
- *       500:
- *         description: Error
- *   put:
- *     tags:
- *       - automates
- *     description: Update automate by ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the workspace of the automate
- *       - in: path
- *         name: automate_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the automate to update
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               trigger:
- *                 type: int
- *               trigger_option:
- *                  type: string
- *               action:
- *                  type: int
- *               action_option:
- *                  type: string
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Unknown workspace_id or automate_id
- *       406:
- *         description: Method not allowed
- *       500:
- *         description: Error
- *   delete:
- *     tags:
- *       - automates
- *     description: Delete automate by id
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the workspace of the automate
- *       - in: path
- *         name: automate_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the automate to delete
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Unknown workspace_id or automate_id
- *       500:
- *         description: Error
+ *       '500':
+ *         description: Internal Server Error
  */
+
+/**
+ * @swagger
+ * /automates/{id}/logs:
+ *   get:
+ *     summary: Get logs for a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful retrieval of logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '500':
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /automates/{id}/logs:
+ *   delete:
+ *     summary: Delete logs for a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Logs deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '500':
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /automates/{id}/workflow:
+ *   put:
+ *     summary: Update workflow for a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: Workflow data
+ *         schema:
+ *           type: object
+ *           properties:
+ *             workflow:
+ *               type: object
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Workflow updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '422':
+ *         description: Unprocessable Entity
+ *       '500':
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /automates/{id}:
+ *   get:
+ *     summary: Get details of a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful retrieval of automate details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 is_private:
+ *                   type: boolean
+ *                 workspace_id:
+ *                   type: integer
+ *                 is_enabled:
+ *                   type: boolean
+ *                 views:
+ *                   type: integer
+ *                 workflow:
+ *                   type: object
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '500':
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /automates/{id}:
+ *   put:
+ *     summary: Update details of a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *       - in: body
+ *         name: body
+ *         required: true
+ *         description: Automate details
+ *         schema:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             is_private:
+ *               type: boolean
+ *             is_enabled:
+ *               type: boolean
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Automate details updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '422':
+ *         description: Unprocessable Entity
+ *       '500':
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /automates/{id}:
+ *   delete:
+ *     summary: Delete a specific automate
+ *     tags: [Automates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The ID of the automate
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Automate deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ *       '500':
+ *         description: Internal Server Error
+ */
+
 
 export default function index(app) {
     app.get('/automates/search/:input', async (request, response) => {

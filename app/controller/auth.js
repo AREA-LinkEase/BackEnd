@@ -5,13 +5,52 @@ import jwt from "jsonwebtoken";
 
 
 /**
- * @openapi
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: User authentication and registration
+ */
+
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       description: User registration data
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Bad Request - Missing required fields
+ *       409:
+ *         description: Conflict - User with the same username or email already exists
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
  * /auth/login:
  *   post:
- *     tags:
- *       - users
- *     description: Login
+ *     summary: Log in and receive a JWT token
+ *     tags: [Authentication]
  *     requestBody:
+ *       description: User login credentials
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
@@ -23,37 +62,20 @@ import jwt from "jsonwebtoken";
  *                 type: string
  *     responses:
  *       200:
- *         description: Success
+ *         description: Bearer token for successful login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 jwt:
+ *                   type: string
+ *       400:
+ *         description: Bad Request - Missing required fields
  *       401:
- *         description: Unauthorized
- *       422:
- *         description: Unprocessable Entity
- *       500:
- *         description: Internal Server Error
- * /auth/register:
- *   post:
- *     tags:
- *       - users
- *     description: Create a new user
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *               email:
- *                 type: string
- *     responses:
- *       201:
- *         description: Success
- *       409:
- *         description: Username or email already taken
- *       422:
- *         description: Unprocessable Entity
+ *         description: Unauthorized - Invalid credentials
+ *       404:
+ *         description: Not Found - User not found
  *       500:
  *         description: Internal Server Error
  */

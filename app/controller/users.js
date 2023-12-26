@@ -7,96 +7,256 @@ import { hashPassword } from "../utils/hash_password.js"
 import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
 
 /**
- * @openapi
- * /users:
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management
+ */
+
+/**
+ * @swagger
+ * /users/@me:
  *   get:
- *     tags:
- *       - users
+ *     summary: Get the authenticated user
+ *     tags: [Users]
  *     security:
- *       - bearerAuth: []
- *     description: Get all users
+ *       - BearerAuth: []
  *     responses:
- *       200:
- *         description: Success
- *       500:
- *         description: Internal Server Error
- * /users/{user_id}:
- *   get:
- *     tags:
- *       - users
- *     security:
- *       - bearerAuth: []
- *     description: Get user by id
- *     parameters:
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the user to get
- *     responses:
- *       200:
- *         description: Success
- *       404:
- *         description: Unknown user
- *       500:
- *         description: Internal Server Error
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/@me:
  *   put:
- *     tags:
- *       - users
+ *     summary: Update the authenticated user
+ *     tags: [Users]
  *     security:
- *       - bearerAuth: []
- *     description: Update user by ID
- *     parameters:
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: the ID of the user to update
+ *       - BearerAuth: []
  *     requestBody:
+ *       description: User data to be updated
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               username:
- *                 type: string
  *               password:
  *                 type: string
- *               email:
- *                 type: string
+ *             example:
+ *               password: newPassword
  *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden Request
- *       404:
- *         description: Unknown workspace_id or automate_id
- *       422:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
  *         description: Unprocessable Entity
- *       500:
- *         description: Error
- *   delete:
- *     tags:
- *       - users
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends:
+ *   get:
+ *     summary: Get the authenticated user's friends
+ *     tags: [Users]
  *     security:
- *       - bearerAuth: []
- *     description: Delete user by id
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends:
+ *   post:
+ *     summary: Add friends to the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       description: List of friends to add
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friends:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *             example:
+ *               friends: [2, 5, 8]
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
+ *         description: Unprocessable Entity
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends/{user_id}:
+ *   delete:
+ *     summary: Remove a friend from the authenticated user's list
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: user_id
  *         required: true
+ *         description: ID of the friend to be removed
  *         schema:
  *           type: integer
- *         description: the ID of the user to delete
  *     responses:
- *       200:
- *         description: Success
- *       404:
- *         description: Unknown user
- *       500:
- *         description: Internal Server Error
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
+ *         description: Unprocessable Entity
+ *       '404':
+ *         description: Not Found
+ */
+
+/**
+ * @swagger
+ * /users/search/{input}:
+ *   get:
+ *     summary: Search users by email or username
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         required: true
+ *         description: Search input (email or username)
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/{user_id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         description: ID of the user to be retrieved
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: User ID
+ *         username:
+ *           type: string
+ *           description: User username
+ *         email:
+ *           type: string
+ *           description: User email
+ *       required:
+ *         - id
+ *         - username
+ *         - email
  */
 
 export default function index(app) {
