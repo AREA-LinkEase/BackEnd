@@ -4,308 +4,587 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
 import {getUserById} from "../model/users.js";
 
 /**
- * @openapi
- * /workspaces:
+ * @swagger
+ * tags:
+ *   name: Workspaces
+ *   description: Workspaces management
+ */
+
+
+/**
+ * @swagger
+ * /workspaces/@me/private:
  *   get:
- *     tags:
- *       - workspaces
+ *     summary: Get private workspaces for the authenticated user
+ *     tags: [Workspaces]
  *     security:
- *       - bearerAuth: []
- *     description: Get all workspaces linked to you
+ *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Success
- *       500:
- *         description: Internal Server Error
- *   post:
- *     tags:
- *       - workspaces
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me/public:
+ *   get:
+ *     summary: Get public workspaces for the authenticated user
+ *     tags: [Workspaces]
  *     security:
- *       - bearerAuth: []
- *     description: Create a new workspace
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me:
+ *   get:
+ *     summary: Get all workspaces for the authenticated user
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me:
+ *   post:
+ *     summary: Create a new workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
+ *       description: Workspace details
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               is_private:
- *                 type: boolean
- *               users_id:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
- *               variables:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
- *               secrets:
- *                 type: object
- *                 properties:
- *                   testJson:
- *                     type: string
+ *             $ref: '#/components/schemas/WorkspaceCreate'
  *     responses:
- *       201:
- *         description: Success
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
  *       422:
  *         description: Unprocessable Entity
- *       500:
- *         description: Internal Server Error
- * /workspaces/{workspace_id}:
- *   get:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Get workspace by id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to get
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       500:
- *         description: Internal Server Error
- *   put:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Modify workspace's name by id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to modify
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       500:
- *         description: Internal Server Error
- *   delete:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Delete workspace by id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to delete
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       500:
- *         description: Internal Server Error
- * /workspaces/private:
- *   get:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Get all private workspaces
- *     responses:
- *       200:
- *         description: Success
- *       500:
- *         description: Internal Server Error
- * /workspaces/public:
- *   get:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Get all public workspaces
- *     responses:
- *       200:
- *         description: Success
- *       500:
- *         description: Internal Server Error
- * /workspaces/{workspace_id}/enable/{enabled}:
- *   get:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Set workspace's enable parameter by workspace id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to get
- *       - in: path
- *         name: enabled
- *         required: true
- *         schema:
- *           type: boolean
- *         description: Enable state to apply
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       422:
- *         description: Unprocessable entity
- *       500:
- *         description: Internal Server Error
- * /workspaces/{workspace_id}/variables:
- *   get:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Get workspace's variables by workspace id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to get
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       500:
- *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/variables/{name}:
  *   post:
- *     tags:
- *       - workspaces
+ *     summary: Update or create a variable in a workspace
+ *     tags: [Workspaces]
  *     security:
- *       - bearerAuth: []
- *     description: Create or modify variable in workspace
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
- *         name: workspace_id
+ *         name: id
+ *         description: Workspace ID
  *         required: true
- *         schema:
- *           type: integer
- *         description: Workspace's ID to get
+ *         type: integer
+ *       - in: path
+ *         name: name
+ *         description: Variable name
+ *         required: true
+ *         type: string
+ *       - in: body
+ *         name: body
+ *         description: Variable content
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VariableUpdate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/variables/{name}:
+ *   delete:
+ *     summary: Delete a variable in a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *       - in: path
+ *         name: name
+ *         description: Variable name
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/users/{user_id}:
+ *   delete:
+ *     summary: Remove a user from a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *       - in: path
+ *         name: user_id
+ *         description: User ID to be removed
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/users:
+ *   post:
+ *     summary: Add a user to a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
  *     requestBody:
+ *       description: User details to be added
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
+ *             $ref: '#/components/schemas/UserAdd'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/automate:
+ *   post:
+ *     summary: Create a new automate in a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     requestBody:
+ *       description: Automate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AutomateCreate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}:
+ *   get:
+ *     summary: Get details of a workspace with automates
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkspaceWithAutomates'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}:
+ *   put:
+ *     summary: Update details of a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     requestBody:
+ *       description: Workspace details to be updated
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkspaceUpdate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/search/{input}:
+ *   get:
+ *     summary: Search for workspaces based on input
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         description: Search input
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/WorkspaceSearchResult'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Workspace:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         owner_id:
+ *           type: integer
+ *         users_id:
+ *           type: array
+ *           items:
  *             type: object
  *             properties:
- *               name_of_the_variable:
- *                 type: all
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       500:
- *         description: Internal Server Error
- * /workspaces/{workspace_id}/variables/{variable_name}:
- *   delete:
- *     tags:
- *       - workspaces
- *     security:
- *       - bearerAuth: []
- *     description: Delete variable in workspace
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
+ *               id:
+ *                 type: integer
+ *               permission:
+ *                 type: integer
+ *         variables:
+ *           type: object
+ *         views:
  *           type: integer
- *         description: Workspace's ID to get
- *       - in: path
- *         name: variable_name
- *         required: true
- *         schema:
+ *         is_enabled:
+ *           type: boolean
+ *     WorkspaceCreate:
+ *       type: object
+ *       properties:
+ *         title:
  *           type: string
- *         description: Variable name to delete
- *     responses:
- *       200:
- *         description: Success
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Workspace not found
- *       422:
- *         description: Unprocessable entity
- *       500:
- *         description: Internal Server Error
- * /workspaces/:workspace_id/users/:user_id:
- *   get:
- *     tags:
- *       - workspaces
- *     description: Add a user by id in a workspace by id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         users_id:
+ *           type: array
+ *           items:
+ *             type: integer
+ *     VariableUpdate:
+ *       type: object
+ *       properties:
+ *         content:
+ *           type: string
+ *     UserAdd:
+ *       type: object
+ *       properties:
+ *         id:
  *           type: integer
- *         description: Workspace's ID to get
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
+ *         permission:
  *           type: integer
- *         description: User's ID to add
- *   delete:
- *     tags:
- *       - workspaces
- *     description: Delete a user by id in a workspace by id
- *     parameters:
- *       - in: path
- *         name: workspace_id
- *         required: true
- *         schema:
+ *     AutomateCreate:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *     WorkspaceWithAutomates:
+ *       allOf:
+ *         - $ref: '#/components/schemas/Workspace'
+ *         - type: object
+ *           properties:
+ *             automates:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Automate'
+ *     WorkspaceUpdate:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         is_enabled:
+ *           type: boolean
+ *     WorkspaceSearchResult:
+ *       type: object
+ *       properties:
+ *         id:
  *           type: integer
- *         description: Workspace's ID to get
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         owner_id:
  *           type: integer
- *         description: User's ID to delete
+ *         views:
+ *           type: integer
+ *     Error404:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Not Found
+ *     Error422:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unprocessable Entity
+ *   errors:
+ *     Error404:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Not Found
+ *     Error422:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unprocessable Entity
  */
 
 export default function index(app) {
