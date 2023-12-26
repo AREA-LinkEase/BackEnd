@@ -74,7 +74,12 @@ export async function connectDatabase(isTest = false) {
                 }
             )
         }
-        await sequelizeInstance.sync()
+        try {
+            await sequelizeInstance.sync()
+        } catch (e) {
+            console.log(e)
+            await sequelizeInstance.sync({force: true})
+        }
         let { User } = await import("./model/users.js");
         let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")
