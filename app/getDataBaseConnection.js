@@ -76,13 +76,13 @@ export async function connectDatabase(isTest = false) {
         }
         await sequelizeInstance.sync()
         let { User } = await import("./model/users.js");
-        let { Automate } = await import("./model/automates.js")
         let { Workspace } = await import("./model/workspaces.js")
+        let { Automate } = await import("./model/automates.js")
         let { Services } = await import("./model/services.js")
         let { Events } = await import("./model/events.js")
         await User.sync()
-        await Automate.sync()
         await Workspace.sync()
+        await Automate.sync()
         await Services.sync()
         await Events.sync()
         try {
