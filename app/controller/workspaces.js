@@ -1,526 +1,820 @@
-import { createWorkspace, deleteWorkspace, getAllWorkspaces, getWorkspaceById, getWorkspaceByPrivacy, getWorkspaceVariables, updateWorkspace, getWorkspaceView } from "../model/workspaces.js"
-import { getAutomatesByWorkpace } from "../model/automates.js"
-import { getPayload } from "../utils/get_payload.js"
+import {createWorkspace, getAllWorkspaces, getWorkspaceById, searchWorkspaces} from "../model/workspaces.js"
+import {createAutomate, getAutomatesByWorkspace} from "../model/automates.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+import {getUserById} from "../model/users.js";
+
+/**
+ * @swagger
+ * tags:
+ *   name: Workspaces
+ *   description: Workspaces management
+ */
+
+
+/**
+ * @swagger
+ * /workspaces/@me/private:
+ *   get:
+ *     summary: Get private workspaces for the authenticated user
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me/public:
+ *   get:
+ *     summary: Get public workspaces for the authenticated user
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me:
+ *   get:
+ *     summary: Get all workspaces for the authenticated user
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Workspace'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /workspaces/@me:
+ *   post:
+ *     summary: Create a new workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       description: Workspace details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkspaceCreate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/variables/{name}:
+ *   post:
+ *     summary: Update or create a variable in a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *       - in: path
+ *         name: name
+ *         description: Variable name
+ *         required: true
+ *         type: string
+ *       - in: body
+ *         name: body
+ *         description: Variable content
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VariableUpdate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/variables/{name}:
+ *   delete:
+ *     summary: Delete a variable in a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *       - in: path
+ *         name: name
+ *         description: Variable name
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/users/{user_id}:
+ *   delete:
+ *     summary: Remove a user from a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *       - in: path
+ *         name: user_id
+ *         description: User ID to be removed
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/users:
+ *   post:
+ *     summary: Add a user to a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     requestBody:
+ *       description: User details to be added
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserAdd'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}/automate:
+ *   post:
+ *     summary: Create a new automate in a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     requestBody:
+ *       description: Automate details
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AutomateCreate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}:
+ *   get:
+ *     summary: Get details of a workspace with automates
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkspaceWithAutomates'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ */
+
+/**
+ * @swagger
+ * /workspaces/{id}:
+ *   put:
+ *     summary: Update details of a workspace
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: Workspace ID
+ *         required: true
+ *         type: integer
+ *     requestBody:
+ *       description: Workspace details to be updated
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WorkspaceUpdate'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Not Found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error404'
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error422'
+ */
+
+/**
+ * @swagger
+ * /workspaces/search/{input}:
+ *   get:
+ *     summary: Search for workspaces based on input
+ *     tags: [Workspaces]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         description: Search input
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/WorkspaceSearchResult'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Workspace:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         owner_id:
+ *           type: integer
+ *         users_id:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               permission:
+ *                 type: integer
+ *         variables:
+ *           type: object
+ *         views:
+ *           type: integer
+ *         is_enabled:
+ *           type: boolean
+ *     WorkspaceCreate:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         users_id:
+ *           type: array
+ *           items:
+ *             type: integer
+ *     VariableUpdate:
+ *       type: object
+ *       properties:
+ *         content:
+ *           type: string
+ *     UserAdd:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         permission:
+ *           type: integer
+ *     AutomateCreate:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *     WorkspaceWithAutomates:
+ *       allOf:
+ *         - $ref: '#/components/schemas/Workspace'
+ *         - type: object
+ *           properties:
+ *             automates:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Automate'
+ *     WorkspaceUpdate:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         is_private:
+ *           type: boolean
+ *         is_enabled:
+ *           type: boolean
+ *     WorkspaceSearchResult:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         owner_id:
+ *           type: integer
+ *         views:
+ *           type: integer
+ *     Error404:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Not Found
+ *     Error422:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unprocessable Entity
+ *   errors:
+ *     Error404:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Not Found
+ *     Error422:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unprocessable Entity
+ */
 
 export default function index(app) {
-
-    /**
-     * @openapi
-     * /workspaces:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get all workspaces linked to you
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     *   post:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Create a new workspace
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               title:
-     *                 type: string
-     *               description:
-     *                 type: string
-     *               is_private:
-     *                 type: boolean
-     *               users_id:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
-     *               variables:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
-     *               secrets:
-     *                 type: object
-     *                 properties:
-     *                   testJson:
-     *                     type: string
-     *     responses:
-     *       201:
-     *         description: Success
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/{workspace_id}:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get workspace by id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       500:
-     *         description: Internal Server Error
-     *   put:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Modify workspace's name by id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to modify
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               title:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       500:
-     *         description: Internal Server Error
-     *   delete:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Delete workspace by id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to delete
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/private:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get all private workspaces
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/public:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get all public workspaces
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/{workspace_id}/enable/{enabled}:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Set workspace's enable parameter by workspace id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *       - in: path
-     *         name: enabled
-     *         required: true
-     *         schema:
-     *           type: boolean
-     *         description: Enable state to apply
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       422:
-     *         description: Unprocessable entity
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/{workspace_id}/variables:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get workspace's variables by workspace id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       500:
-     *         description: Internal Server Error
-     *   post:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Create or modify variable in workspace
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               name_of_the_variable:
-     *                 type: all
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/{workspace_id}/variables/{variable_name}:
-     *   delete:
-     *     tags:
-     *       - workspaces
-     *     security:
-     *       - bearerAuth: []
-     *     description: Delete variable in workspace
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *       - in: path
-     *         name: variable_name
-     *         required: true
-     *         schema:
-     *           type: string
-     *         description: Variable name to delete
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden
-     *       404:
-     *         description: Workspace not found
-     *       422:
-     *         description: Unprocessable entity
-     *       500:
-     *         description: Internal Server Error
-     * /workspaces/:workspace_id/users/:user_id:
-     *   get:
-     *     tags:
-     *       - workspaces
-     *     description: Add a user by id in a workspace by id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: User's ID to add
-     *   delete:
-     *     tags:
-     *       - workspaces
-     *     description: Delete a user by id in a workspace by id
-     *     parameters:
-     *       - in: path
-     *         name: workspace_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: Workspace's ID to get
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: User's ID to delete
-     */
-    app.post('/workspaces/:workspace_id/variables', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let workspace_id = request.params.workspace_id
-        let body = request.body
-
+    app.get('/workspaces/@me/private', async (request, response) => {
         try {
-            let workspace = await getWorkspaceById(workspace_id, payload.id)
-            if (workspace === 404)
-                return NotFound(response)
-            const error = await updateWorkspace(workspace_id, payload.id, { variables: { ...workspace.variables, ...body }})
-            if (error === 404)
-                return NotFound(response)
-            else if (error === 403)
-                return Forbidden(response)
-            return response.status(200).json({result: "Workspace's variable created successfully"})
-        } catch(error) {
-            console.log(error);
-            InternalError(response)
-        }
-    })
-    app.post('/workspaces', async (request, response) => {
-        let body = request.body
-        let payload = getPayload(request.headers.authorization)
+            let workspaces = await getAllWorkspaces(response.locals.user.id)
+            let results = [];
 
-        if (body.title === undefined || body.description === undefined || body.is_private === undefined)
-            return UnprocessableEntity(response)
-        try {
-            let users_id = JSON.parse('{"ids": [' + payload.id + ']}')
-
-            await createWorkspace(
-                body.title,
-                body.description,
-                body.is_private,
-                users_id,
-                payload.id
-            )
-            return response.status(201).json({result: "Workspace created successfully"})
-        } catch (error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/viewWorkspaces', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let json = await getWorkspaceView(true, payload.id)
-            return response.status(200).json({result: json})
+            for (const workspace of workspaces) {
+                if (workspace.is_private)
+                    results.push(workspace.toJSON())
+            }
+            return response.status(200).json(results)
         } catch(error) {
             InternalError(response)
         }
     })
-    app.get('/workspaces/private', async (request, response) => {
+    app.get('/workspaces/@me/public', async (request, response) => {
         try {
-            let json = await getWorkspaceByPrivacy(true)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/public', async (request, response) => {
-        try {
-            let json = await getWorkspaceByPrivacy(false)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/:workspace_id/users/:user_id', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-        let user_id = parseInt(request.params.user_id)
+            let workspaces = await getAllWorkspaces(response.locals.user.id)
+            let results = [];
 
+            for (const workspace of workspaces) {
+                if (!workspace.is_private)
+                    results.push(workspace.toJSON())
+            }
+            return response.status(200).json(results)
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/@me', async (request, response) => {
         try {
+            let workspaces = await getAllWorkspaces(response.locals.user.id)
+            let results = [];
+
+            for (const workspace of workspaces) {
+                results.push(workspace.toJSON())
+            }
+            return response.status(200).json(results)
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.post('/workspaces/@me', async (request, response) => {
+        try {
+            let body = request.body;
+
+            if (!['title', 'description', 'is_private', 'users_id'].every((property) => body[property] !== undefined))
+                return UnprocessableEntity(response)
+            if (!['title', 'description'].every((property) => typeof body[property] === "string"))
+                return UnprocessableEntity(response)
+            if (typeof body['is_private'] !== "boolean")
+                return UnprocessableEntity(response)
+            if (!Array.isArray(body['users_id']))
+                return UnprocessableEntity(response)
+
+            await createWorkspace(body['title'], body['description'], body['is_private'], body['users_id'], response.locals.user.id)
+            return response.status(200).json({result: "Workspace has created successfully"})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.post('/workspaces/:id/variables/:name', async (request, response) => {
+        try {
+            let workspace_id = parseInt(request.params.id)
+            let name = request.params.name
             let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            let body = request.body
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.users_id.ids.includes(user_id))
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
+                return Forbidden(response)
+            if (!("content" in body) || typeof body["content"] !== "string")
                 return UnprocessableEntity(response)
-            await updateWorkspace(workspace_id, { users_id: { ids: [...workspace.users_id.ids, user_id] }})
-            return response.status(200).json({result: "Workspace's user_id parameter added successfully"})
+            let variables = workspace.variables;
+            variables[name] = body["content"]
+            workspace.update({variables})
+            return response.status(200).json({result: "Workspace has been updated successfully"})
         } catch(error) {
             InternalError(response)
         }
     })
-    app.get('/workspaces/:workspace_id/enable/:enabled', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let workspace_id = request.params.workspace_id
-        let enabled = request.params.enabled
-
+    app.delete('/workspaces/:id/variables/:name', async (request, response) => {
         try {
-            if (enabled != "true" && enabled != "false")
-                return UnprocessableEntity(response)
-            const error = await updateWorkspace(workspace_id, payload.id, { enabled: enabled })
-            if (error === 404)
-                return NotFound(response)
-            else if (error === 403)
-                return Forbidden(response)
-            return response.status(200).json({result: "Workspace's enabled parameter changed successfully"})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces/:workspace_id/variables', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let workspace_id = request.params.workspace_id
-
-        try {
-            let json = await getWorkspaceVariables(workspace_id, payload.id)
-            if (json === 404)
-                return NotFound(response)
-            else if (json === 403)
-                return Forbidden(response)
-            return response.status(200).json({result: json.variables})
-        } catch(error) {
-            InternalError(response)
-        }
-    })            
-    app.get('/workspaces/:workspace_id', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let automates = await getAutomatesByWorkpace(workspace_id)
-            let json = await getWorkspaceById(workspace_id, payload.id)
-            if (json === 404)
-                return NotFound(response)
-            else if (json === 403)
-                return Forbidden(response)
-            return response.status(200).json({result: { ...json.toJSON(), automates: automates }})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/workspaces', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let json = await getAllWorkspaces(payload.id)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            return response.status(500).json({result: payload.toString()})
-        }
-    })
-    app.put('/workspaces/:workspace_id', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let workspace_id = request.params.workspace_id
-        let body = request.body
-
-        try {
-            const error = await updateWorkspace(workspace_id, payload.id, body)
-            if (error === 404)
-                return NotFound(response)
-            else if (error === 403)
-                return Forbidden(response)
-            return response.status(200).json({result: "Workspace's name changed successfully"})
-        } catch(error) {
-            console.log(error);
-
-            InternalError(response)
-        }
-    })
-    app.delete('/workspaces/:workspace_id/variables/:variable_name', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-        let variable_name = request.params.variable_name
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            let workspace = await getWorkspaceById(workspace_id, payload.id)
-            if (workspace === 404)
-                return NotFound(response)
-            else if (workspace === 403)
-                return Forbidden(response)
-            if (workspace.variables === null || workspace.variables[variable_name])
-                return NotFound(response)
-            delete workspace.variables[variable_name]
-            await updateWorkspace(workspace_id, payload.id, { variables: { ...workspace.variables }})
-            return response.status(200).json({result: "Workspace's variable deleted successfully"})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.delete('/workspaces/:workspace_id/users/:user_id', async (request, response) => {
-        let workspace_id = request.params.workspace_id
-        let user_id = parseInt(request.params.user_id)
-
-        try {
+            let workspace_id = parseInt(request.params.id)
+            let name = request.params.name
             let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
             if (workspace === null)
                 return NotFound(response)
-            if (workspace.users_id === null || workspace.users_id[user_id])
-                return NotFound(response)
-            if (user_id === workspace.owner_id)
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
-            const index = workspace.users_id.ids.indexOf(user_id)
-            workspace.users_id.ids.splice(index, 1)
-            await updateWorkspace(workspace_id, { users_id: { ...workspace.users_id } })
-            return response.status(200).json({result: "Workspace's user_id parameter deleted successfully"})
+            let variables = workspace.variables;
+            delete variables[name]
+            workspace.update({variables})
+            return response.status(200).json({result: "Workspace has been updated successfully"})
         } catch(error) {
             InternalError(response)
         }
     })
-    app.delete('/workspaces/:workspace_id', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let workspace_id = request.params.workspace_id
-
+    app.delete('/workspaces/:id/users/:user_id', async (request, response) => {
         try {
-            const error = await deleteWorkspace(workspace_id, payload.id)
-            if (error === 404)
+            let workspace_id = parseInt(request.params.id)
+            let other_user_id = parseInt(request.params.user_id)
+            let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            if (workspace === null)
                 return NotFound(response)
-            else if (error === 403)
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
                 return Forbidden(response)
-            return response.status(200).json({result: "Workspace deleted successfully"})
-        } catch (error) {
+            let users_id = workspace.users_id;
+            users_id = users_id.filter(userId => userId.id !== other_user_id)
+            workspace.update({users_id})
+            return response.status(200).json({result: "Workspace has been updated successfully"})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.post('/workspaces/:id/users', async (request, response) => {
+        try {
+            let workspace_id = parseInt(request.params.id)
+            let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            let body = request.body
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
+                return Forbidden(response)
+            if (!("permission" in body) || !("id" in body) || typeof body.permission !== "number" || typeof body.id !== "number")
+                return UnprocessableEntity(response)
+            if (body.permission < 0 || body.permission > 3)
+                return UnprocessableEntity(response)
+            let user = await getUserById(body.id)
+            if (user === null)
+                return NotFound(response)
+            let users_id = workspace.users_id;
+            users_id = users_id.filter(userId => userId.id !== body.id)
+            users_id.push({id: body.id, permission: body.permission})
+            workspace.update({users_id})
+            return response.status(200).json({result: "Workspace has been updated successfully"})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.post('/workspaces/:id/automate', async (request, response) => {
+        try {
+            let workspace_id = parseInt(request.params.id)
+            let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            let body = request.body
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
+                return Forbidden(response)
+            if (!['title', 'is_private'].every((property) => body[property] !== undefined))
+                return UnprocessableEntity(response)
+            if (typeof body['title'] !== "string")
+                return UnprocessableEntity(response)
+            if (typeof body['is_private'] !== "boolean")
+                return UnprocessableEntity(response)
+            await createAutomate(body['title'], body['is_private'], workspace_id)
+            return response.status(200).json({result: "Automate has been created successfully"})
+        } catch(error) {
+            console.log(error)
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/:id', async (request, response) => {
+        try {
+            let workspace_id = parseInt(request.params.id)
+            let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.is_private && workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id))
+                return Forbidden(response)
+            let automates = await getAutomatesByWorkspace(workspace_id)
+            return response.status(200).json({
+                ...workspace.toJSON(),
+                automates
+            })
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.put('/workspaces/:id', async (request, response) => {
+        try {
+            let workspace_id = parseInt(request.params.id)
+            let workspace = await getWorkspaceById(workspace_id)
+            let user_id = response.locals.user.id
+            let body = request.body
+            if (workspace === null)
+                return NotFound(response)
+            if (workspace.owner_id !== user_id &&
+                workspace.users_id.every(user => user.id !== user_id && user.permission < 3))
+                return Forbidden(response)
+            if (!Object.keys(body).every((value) => ["title", "description", "is_private", "is_enabled"].includes(value)))
+                return UnprocessableEntity(response)
+            workspace.update(body)
+            return response.status(200).json({result: "Workspace has been updated successfully"})
+        } catch(error) {
+            InternalError(response)
+        }
+    })
+    app.get('/workspaces/search/:input', async (request, response) => {
+        try {
+            let input = request.params.input
+            let workspaces = await searchWorkspaces(input)
+            let results = [];
+
+            for (const workspace of workspaces) {
+                if (workspace.is_private) continue;
+                results.push({
+                    id: workspace.id,
+                    title: workspace.title,
+                    description: workspace.description,
+                    owner_id: workspace.owner_id,
+                    views: workspace.views
+                })
+            }
+            return response.status(200).json(results)
+        } catch(error) {
             InternalError(response)
         }
     })

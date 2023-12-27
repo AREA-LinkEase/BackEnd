@@ -1,275 +1,372 @@
-import { createUser, deleteUser, getAllUsers, getIdByUsername, getSelf, getUserByEmail, getUserById, getUserByUsername, updateUser } from "../model/users.js"
-import { checkPassword, hashPassword } from "../utils/hash_password.js"
-import jwt from "jsonwebtoken"
-import { Forbidden, InternalError, NotFound, Unauthorized, UnprocessableEntity } from "../utils/request_error.js"
-import { getPayload } from "../utils/get_payload.js"
+import {
+    getUserById,
+    searchUser,
+    updateUser
+} from "../model/users.js"
+import { hashPassword } from "../utils/hash_password.js"
+import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management
+ */
+
+/**
+ * @swagger
+ * /users/@me:
+ *   get:
+ *     summary: Get the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/@me:
+ *   put:
+ *     summary: Update the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       description: User data to be updated
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               password:
+ *                 type: string
+ *             example:
+ *               password: newPassword
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
+ *         description: Unprocessable Entity
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends:
+ *   get:
+ *     summary: Get the authenticated user's friends
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends:
+ *   post:
+ *     summary: Add friends to the authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       description: List of friends to add
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               friends:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *             example:
+ *               friends: [2, 5, 8]
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
+ *         description: Unprocessable Entity
+ */
+
+/**
+ * @swagger
+ * /users/@me/friends/{user_id}:
+ *   delete:
+ *     summary: Remove a friend from the authenticated user's list
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         description: ID of the friend to be removed
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *             example:
+ *               result: User changed successfully
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '422':
+ *         description: Unprocessable Entity
+ *       '404':
+ *         description: Not Found
+ */
+
+/**
+ * @swagger
+ * /users/search/{input}:
+ *   get:
+ *     summary: Search users by email or username
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         required: true
+ *         description: Search input (email or username)
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ */
+
+/**
+ * @swagger
+ * /users/{user_id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         description: ID of the user to be retrieved
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Successful operation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       '401':
+ *         description: Unauthorized
+ *       '403':
+ *         description: Forbidden
+ *       '404':
+ *         description: Not Found
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: User ID
+ *         username:
+ *           type: string
+ *           description: User username
+ *         email:
+ *           type: string
+ *           description: User email
+ *       required:
+ *         - id
+ *         - username
+ *         - email
+ */
 
 export default function index(app) {
-
-    /**
-     * @openapi
-     * /login:
-     *   post:
-     *     tags:
-     *       - users
-     *     description: Login
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Success
-     *       401:
-     *         description: Unauthorized
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Internal Server Error
-     * /register:
-     *   post:
-     *     tags:
-     *       - users
-     *     description: Create a new user
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *               email:
-     *                 type: string
-     *     responses:
-     *       201:
-     *         description: Success
-     *       409:
-     *         description: Username or email already taken
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Internal Server Error
-     * /users:
-     *   get:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get all users
-     *     responses:
-     *       200:
-     *         description: Success
-     *       500:
-     *         description: Internal Server Error
-     * /users/{user_id}:
-     *   get:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Get user by id
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to get
-     *     responses:
-     *       200:
-     *         description: Success
-     *       404:
-     *         description: Unknown user
-     *       500:
-     *         description: Internal Server Error
-     *   put:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Update user by ID
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to update
-     *     requestBody:
-     *       content:
-     *         application/json:
-     *           schema:
-     *             type: object
-     *             properties:
-     *               username:
-     *                 type: string
-     *               password:
-     *                 type: string
-     *               email:
-     *                 type: string
-     *     responses:
-     *       200:
-     *         description: Success
-     *       403:
-     *         description: Forbidden Request
-     *       404:
-     *         description: Unknown workspace_id or automate_id
-     *       422:
-     *         description: Unprocessable Entity
-     *       500:
-     *         description: Error
-     *   delete:
-     *     tags:
-     *       - users
-     *     security:
-     *       - bearerAuth: []
-     *     description: Delete user by id
-     *     parameters:
-     *       - in: path
-     *         name: user_id
-     *         required: true
-     *         schema:
-     *           type: integer
-     *         description: the ID of the user to delete
-     *     responses:
-     *       200:
-     *         description: Success
-     *       404:
-     *         description: Unknown user
-     *       500:
-     *         description: Internal Server Error
-     */
-    app.post('/register', async (request, response) => {
-        let body = request.body
-
-        if (body.username === undefined || body.email === undefined || body.password === undefined)
-            return UnprocessableEntity(response)
+    app.get('/users/@me', async (request, response) => {
         try {
-            let hashed_password = await hashPassword(body.password)
-            await createUser(
-                body.username,
-                body.email,
-                hashed_password,
-            )
-            return response.status(201).json({result: "User created successfully"})
-        } catch (error) {
-            if (error.name === "SequelizeUniqueConstraintError") {
-                return response.status(409).json({error: "Username or email is already taken"})
-            }
-            InternalError(response)
-        }
-    })
-    app.post('/login', async (request, response) => {
-        let username = request.body.username
-        let plainPassword = request.body.password
-
-        if (username === undefined || plainPassword === undefined)
-            return UnprocessableEntity(response)
-        try {
-            let user = await getUserByUsername(username)
-            if (user === null)
-                user = await getUserByEmail(username)
-            if (user === null)
-                return NotFound(response)
-            let isValidPassword = await checkPassword(plainPassword, user.dataValues.password)
-            if (isValidPassword === true) {
-                const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
-                    expiresIn: '2h',
-                });
-                return response.status(200).json({jwt: "Bearer " + token})
-            } else
-                return Unauthorized(response)
-        } catch (error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users/self', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-
-        try {
-            const json = await getSelf(payload.id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
+            return response.status(200).json(response.locals.user)
         } catch (error) {
             return InternalError(response)
         }
     })
-    app.get('/users/username/:username', async (request, response) => {
-        let username = request.params.username
+    app.put('/users/@me', async (request, response) => {
+        try {
+            let body = request.body
 
-        try {
-            let json = await getIdByUsername(username)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users/:user_id', async (request, response) => {
-        let user_id = request.params.user_id
-
-        try {
-            let json = await getUserById(user_id)
-            if (json === null)
-                return NotFound(response)
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.get('/users', async (request, response) => {
-        try {
-            let json = await getAllUsers()
-            return response.status(200).json({result: json})
-        } catch(error) {
-            InternalError(response)
-        }
-    })
-    app.put('/users/:user_id', async (request, response) => {
-        let payload = getPayload(request.headers.authorization)
-        let user_id = request.params.user_id
-        let body = request.body
-
-        if (user_id === undefined || body === undefined)
-            return UnprocessableEntity(response)
-        if (user_id !== payload.id)
-            return Forbidden(response)
-        if (body.password)
-            body.password = await hashPassword(body.password)
-        try {
-            let error = await updateUser(user_id, body)
+            if (body === undefined)
+                return UnprocessableEntity(response)
+            if (body.password)
+                body.password = await hashPassword(body.password)
+            let error = await updateUser(response.locals.user.id, body)
             if (error)
                 return NotFound(response)
             return response.status(200).json({result: "User changed successfully"})
-        } catch(error) {
-            InternalError(response)
+        } catch (error) {
+            console.log(error)
+            return InternalError(response)
         }
     })
-    app.delete('/users/:user_id', async (request, response) => {
-        let user_id = request.params.user_id
-        let payload = getPayload(request.headers.authorization)
-
-        if (user_id !== payload.id)
-            return Forbidden(response)
+    app.get('/users/@me/friends', async (request, response) => {
         try {
-            let error = await deleteUser(user_id)
-            if (error)
-                return NotFound(response)
-            return response.status(200).json({result: "User deleted successfully"})
+            let friends = response.locals.user.friends
+            let results = [];
+
+            for (const friend of friends) {
+                let user = await getUserById(friend);
+
+                if (user === null) continue;
+                results.push({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email
+                })
+            }
+            return response.status(200).json(results)
         } catch (error) {
-            console.log(error);
-            InternalError(response)
+            return InternalError(response)
+        }
+    })
+    app.post('/users/@me/friends', async (request, response) => {
+        let body = request.body;
+
+        if (body === undefined) return UnprocessableEntity(response);
+
+        let newFriends = body.friends;
+
+        if (newFriends === undefined || !Array.isArray(newFriends)) return UnprocessableEntity;
+
+        let friends = response.locals.user.friends
+
+        friends = [...friends, ...newFriends]
+
+        await updateUser(response.locals.user.id, {friends})
+
+        return response.status(200).json({result: "User changed successfully"})
+    })
+    app.delete('/users/@me/friends/:user_id', async (request, response) => {
+        let userId = parseInt(request.params.user_id);
+
+        if (userId === undefined || isNaN(userId)) return UnprocessableEntity(response);
+
+        let friends = response.locals.user.friends
+
+        if (friends.includes(userId)) {
+            friends.splice(friends.indexOf(userId), 1)
+            await updateUser(response.locals.user.id, {friends})
+        } else {
+            return NotFound(response)
+        }
+        return response.status(200).json({result: "User changed successfully"})
+    })
+    app.get('/users/search/:input', async (request, response) => {
+        try {
+            let input = request.params.input;
+            let users = await searchUser(input);
+            let results = [];
+
+            for (const user of users) {
+                results.push({
+                    id: user.id,
+                    username: user.username,
+                    email: user.email
+                })
+            }
+            return response.status(200).json(results)
+        } catch (error) {
+            return InternalError(response)
+        }
+    })
+    app.get('/users/:user_id', async (request, response) => {
+        try {
+            let userId = parseInt(request.params.user_id);
+            let user = await getUserById(userId);
+
+            if (user === null) return NotFound(response)
+            return response.status(200).json({
+                id: user.id,
+                username: user.username,
+                email: user.email
+            })
+        } catch (error) {
+            return InternalError(response)
         }
     })
 }

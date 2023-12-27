@@ -1,139 +1,148 @@
-import { DataTypes } from 'sequelize'
-import { getSequelize } from '../getDataBaseConnection.js'
+import {DataTypes, Op} from 'sequelize'
+import {getSequelize} from '../getDataBaseConnection.js'
+import {User} from "./users.js";
 
-const Workspace = getSequelize().define('Workspace', {
-        title: {
-            type: DataTypes.STRING,
-            allowNull: false
+/**
+ * @typedef {Object} WorkspaceModel
+ * @property {number} id - Unique identifier for the workspace.
+ * @property {string} title - Title of the workspace.
+ * @property {string} description - Description of the workspace.
+ * @property {boolean} is_private - Indicates whether the workspace is private or not.
+ * @property {number} owner_id - User ID of the owner of the workspace.
+ * @property {string} users_id - JSON string representing an array of users and their permissions.
+ * @property {string} variables - JSON string representing variables associated with the workspace.
+ * @property {number} views - Number of views the workspace has.
+ * @property {boolean} is_enabled - Indicates whether the workspace is enabled or not.
+ */
+
+const Workspace = getSequelize().define('workspaces', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false,
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    description: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+    },
+    is_private: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+    },
+    owner_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: User,
+            key: 'id',
         },
-        description: {
-            type: DataTypes.STRING,
-            allowNull: false
+    },
+    users_id: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '[]',
+        comment: '{id: user_id, permission: 0 | 1 | 2 | 3}',
+        get: function () {
+            return JSON.parse(this.getDataValue('users_id'));
         },
-        is_private: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true
-        },
-        users_id: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        variables: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        secrets: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        enabled: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true
-        },
-        owner_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: -1
+        set: function (value) {
+            this.setDataValue('users_id', JSON.stringify(value));
         }
-    }, {
-        timestamps: false,
-    }
-)
-
-export async function getWorkspaceView() {
-    const workspaces = await Workspace.findAll({
-        where: {
-            is_private: false
+    },
+    variables: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: '{}',
+        get: function () {
+            return JSON.parse(this.getDataValue('variables'));
         },
-        attributes: ['title', 'description']
-    })
-    return workspaces
-}
+        set: function (value) {
+            this.setDataValue('variables', JSON.stringify(value));
+        }
+    },
+    views: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0,
+    },
+    is_enabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+    },
+});
 
-
+/**
+ * Gets all workspaces owned by a specific user.
+ * @param {number} user_id - User ID to filter workspaces.
+ * @returns {Promise<WorkspaceModel[]>} - A promise resolving to an array of workspaces.
+ */
 export async function getAllWorkspaces(user_id) {
-    const result = []
+    const result = await Workspace.findAll({
+        where: {
+            owner_id: user_id
+        }
+    })
     const workspaces = await Workspace.findAll()
     workspaces.forEach(workspace => {
-        if (JSON.parse(workspace.users_id).ids.includes(user_id))
-            result.push(workspace)
+        for (const user of workspace.users_id)
+            if (user.id === user_id)
+                result.push(workspace)
     });
     return result
 }
 
-export async function getWorkspaceById(id, user_id) {
-    const workspace = await Workspace.findOne({
+/**
+ * Gets a workspace by its ID.
+ * @param {number} id - ID of the workspace.
+ * @returns {Promise<WorkspaceModel|null>} - A promise resolving to the found workspace or null if not found.
+ */
+export async function getWorkspaceById(id) {
+    return await Workspace.findOne({
         where: {
             id: id
         }
     })
-    if (workspace && JSON.parse(workspace.users_id).ids.includes(user_id))
-        return workspace
-    else if (workspace === null)
-        return 404
-    return 403
 }
 
-export async function getWorkspaceByPrivacy(bool, user_id) {
-    const result = []
-    const workspaces = await Workspace.findAll({
-        where: {
-            is_private: bool
-        }
-    })
-    workspaces.forEach(workspace => {
-        if (JSON.parse(workspace.users_id).ids.includes(user_id))
-            result.push(workspace)
-    });
-    return result
-}
-
-export async function updateWorkspace(id, user_id, changes) {
-    const workspace = await getWorkspaceById(id, user_id)
-    if (workspace === 404 || workspace === 403)
-        return workspace
-    await workspace.update(changes)
-    return false
-}
-
-export async function getWorkspaceVariables(id, user_id) {
-    const workspace = await Workspace.findOne({
-        where: {
-            id: id
-        },
-        attributes: ['variables', 'users_id']
-    })
-    console.log(workspace);
-    if (workspace && JSON.parse(workspace.users_id).ids.includes(user_id))
-        return workspace
-    else if (workspace === null)
-        return 404
-    return 403
-}
-
-export async function createWorkspace(title, description, is_private, users_id, owner_id, variables, secrets) {
-    const newWorkspace = await Workspace.create({
+/**
+ * Creates a new workspace.
+ * @param {string} title - Title of the new workspace.
+ * @param {string} description - Description of the new workspace.
+ * @param {boolean} is_private - Indicates whether the new workspace is private or not.
+ * @param {string} users_id - JSON string representing an array of users and their permissions.
+ * @param {number} owner_id - User ID of the owner of the new workspace.
+ * @returns {Promise<WorkspaceModel>} - A promise resolving to the created workspace.
+ */
+export async function createWorkspace(title, description, is_private, users_id, owner_id) {
+    return await Workspace.create({
         title: title,
         description: description,
         is_private: is_private,
         users_id: users_id,
-        variables: variables,
-        secrets: secrets,
         owner_id: owner_id
-    });
-    return newWorkspace
+    })
 }
 
-export async function deleteWorkspace(workspace_id, user_id) {
-    const workspace = await getWorkspaceById(workspace_id, user_id)
-    if (workspace === 404 || workspace === 403)
-        return workspace
-    if (workspace.owner_id !== user_id)
-        return 403
-    await workspace.destroy()
-    return false
+/**
+ * Searches for workspaces with a given title.
+ * @param {string} input - The search input to match against workspace titles.
+ * @returns {Promise<WorkspaceModel[]>} - A promise resolving to an array of matching workspaces.
+ */
+export async function searchWorkspaces(input) {
+    return Workspace.findAll({
+        where: {
+            title: {
+                [Op.like]: `%${input}%`
+            }
+        }
+    })
 }
 
 export { Workspace }
