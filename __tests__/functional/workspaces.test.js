@@ -1,161 +1,283 @@
 import request from 'supertest';
 import { app } from '../../config/express.js';
 import {setupTest} from "../../testBase.js";
+import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
 import {getSequelize} from "../../app/getDataBaseConnection.js";
-import { expect } from '@jest/globals';
-
-let id
 
 beforeAll(async () => {
     await setupTest()
 });
+
+afterAll(async () => {
+    await getSequelize().close()
+})
 
 let token = null;
 
 async function getToken() {
     if (token) return token;
     const userData = {
-        username: "test",
-        password: "test",
+        username: "user_test",
+        password: "user created with jest",
     }
     const response = await request(app)
-        .post('/login')
-        .set('Accept', 'application/json')
+        .post('/auth/login')
         .send(userData)
+        .set('Accept', 'application/json')
+    expect(response.status).toBe(200)
+    expect(response.body.jwt).toBeDefined()
     token = response.body.jwt;
     return token
 }
 
-describe('POST /workspaces', () => {
-    test('should create a new workspace', async () => {
-        const workspaceData = {
-            title: "workspace_test",
-            description: "workspace created with jest",
-            is_private: false
+describe('/workspaces/@me', () => {
+    test('should create public workspace', async () => {
+        const data = {
+            title: "title 1",
+            description: "beautiful description",
+            is_private: false,
+            users_id: []
         }
         const response = await request(app)
-            .post('/workspaces')
-            .send(workspaceData)
-            .set('Accept', 'application/json').set("Authorization", await getToken());
+            .post('/workspaces/@me')
+            .send(data)
+            .set("Authorization", await getToken());
 
-        expect(response.status).toBe(201);
+        expect(response.status).toBe(200);
     });
-    test('should return 401', async () => {
-        const workspaceData = {
-            title: "workspace_test",
-            description: "workspace created with jest",
-            is_private: false
+    test('should response 401', async () => {
+        const response = await request(app).post('/workspaces/@me');
+
+        expect(response.status).toBe(401);
+    });
+    test('should create private workspace', async () => {
+        const data = {
+            title: "title 2",
+            description: "beautiful description",
+            is_private: true,
+            users_id: []
         }
         const response = await request(app)
-            .post('/workspaces')
-            .send(workspaceData)
-            .set('Accept', 'application/json');
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('GET /workspaces', () => {
-    test('should get all workspaces', async () => {
-        const response = await request(app).get('/workspaces').set("Authorization", await getToken());
-        
-        id = response.body.result[response.body.result.length - 1].id
-        expect(response.status).toBe(200);
-        response.body.result.forEach(workspace => {
-            expect(workspace).toHaveProperty('title');
-            expect(workspace).toHaveProperty('description');
-            expect(workspace).toHaveProperty('is_private');
-        });
-    });
-    test('should return 401', async () => {
-        const response = await request(app).get('/workspaces');
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('GET /workspaces/{workspace_id}', () => {
-    test('should get a workspace by ID', async () => {
-        const response = await request(app).get(`/workspaces/${id}`).set("Authorization", await getToken());
+            .post('/workspaces/@me')
+            .send(data)
+            .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        expect(response.body.result).toHaveProperty('title');
-        expect(response.body.result).toHaveProperty('description');
-        expect(response.body.result).toHaveProperty('is_private');
     });
-    test('should return 401', async () => {
-        const response = await request(app).get(`/workspaces/${id}`);
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('PUT /workspaces/{workspace_id}', () => {
-    test('should modify a workspace by ID', async () => {
-        const updatedWorkspace = { title: 'Workspace Modifié' };
+    test('should get workspaces', async () => {
         const response = await request(app)
-            .put(`/workspaces/${id}`)
-            .send(updatedWorkspace).set("Authorization", await getToken());
-    
-        expect(response.status).toBe(200);
-      });
-    test('should return 401', async () => {
-        const updatedWorkspace = { title: 'Workspace Modifié' };
-        const response = await request(app)
-            .put(`/workspaces/${id}`)
-            .send(updatedWorkspace)
+            .get('/workspaces/@me')
+            .set("Authorization", await getToken());
 
-        expect(response.status).toBe(401);
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBeGreaterThanOrEqual(3);
+        response.body.forEach((workspace) => {
+            expect(workspace).toHaveProperty("id")
+            expect(workspace).toHaveProperty("title")
+            expect(workspace).toHaveProperty("description")
+            expect(workspace).toHaveProperty("is_private")
+            expect(workspace).toHaveProperty("owner_id")
+            expect(workspace).toHaveProperty("users_id")
+            expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty("views")
+            expect(workspace).toHaveProperty("is_enabled")
+        })
+    });
+    test('should get workspace in public space', async () => {
+        const response = await request(app)
+            .get('/workspaces/@me/public')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBeGreaterThanOrEqual(2);
+        response.body.forEach((workspace) => {
+            expect(workspace).toHaveProperty("id")
+            expect(workspace).toHaveProperty("title")
+            expect(workspace).toHaveProperty("description")
+            expect(workspace).toHaveProperty("is_private")
+            expect(workspace).toHaveProperty("owner_id")
+            expect(workspace).toHaveProperty("users_id")
+            expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty("views")
+            expect(workspace).toHaveProperty("is_enabled")
+        })
+    });
+    test('should get workspace in private space', async () => {
+        const response = await request(app)
+            .get('/workspaces/@me/private')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBeGreaterThanOrEqual(1);
+        response.body.forEach((workspace) => {
+            expect(workspace).toHaveProperty("id")
+            expect(workspace).toHaveProperty("title")
+            expect(workspace).toHaveProperty("description")
+            expect(workspace).toHaveProperty("is_private")
+            expect(workspace).toHaveProperty("owner_id")
+            expect(workspace).toHaveProperty("users_id")
+            expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty("views")
+            expect(workspace).toHaveProperty("is_enabled")
+        })
+    });
+    test('should response 401', async () => {
+        const response1 = await request(app).get('/workspaces/@me');
+        const response2 = await request(app).get('/workspaces/@me/public');
+        const response3 = await request(app).get('/workspaces/@me/private');
+
+        expect(response1.status).toBe(401);
+        expect(response2.status).toBe(401);
+        expect(response3.status).toBe(401);
+    });
+});
+
+describe('/workspaces/:id', () => {
+    test('should get workspace', async () => {
+        const response = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("id")
+        expect(response.body).toHaveProperty("title")
+        expect(response.body).toHaveProperty("description")
+        expect(response.body).toHaveProperty("is_private")
+        expect(response.body).toHaveProperty("owner_id")
+        expect(response.body).toHaveProperty("users_id")
+        expect(response.body).toHaveProperty("variables")
+        expect(response.body).toHaveProperty("views")
+        expect(response.body).toHaveProperty("is_enabled")
+    });
+    test('should return NotFound', async () => {
+        const response = await request(app)
+            .get('/workspaces/100')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(404);
+    });
+    test('should edit workspace', async () => {
+        const response = await request(app)
+            .put('/workspaces/1')
+            .send({
+                title: "changed title"
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200)
+        expect(response2.body.title).toEqual("changed title")
     });
 })
 
-describe('GET /workspaces/private', () => {
-    test('should get all private workspaces', async () => {
-        const response = await request(app).get('/workspaces/private').set("Authorization", await getToken());
+describe('/workspaces/:id/variable/:name', () => {
+    test('should create variable', async () => {
+        const response = await request(app)
+            .post('/workspaces/1/variables/test')
+            .send({
+                "content": "test"
+            })
+            .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-        response.body.result.forEach(workspace => {
-            expect(workspace).toHaveProperty('title');
-            expect(workspace).toHaveProperty('description');
-            expect(workspace).toHaveProperty('is_private');
-            expect(workspace.is_private).toBe(true)
-        });
-    });
-    test('should return 401', async () => {
-        const response = await request(app).get('/workspaces/private');
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
 
-        expect(response.status).toBe(401);
+        expect(response2.status).toBe(200)
+        expect(response2.body.variables).toHaveProperty("test")
+        expect(response2.body.variables.test).toEqual("test")
     });
-});
-
-describe('GET /workspaces/public', () => {
-    test('should get all public workspaces', async () => {
-        const response = await request(app).get('/workspaces/public').set("Authorization", await getToken());
-        
-        expect(response.status).toBe(200);
-        response.body.result.forEach(workspace => {
-            expect(workspace).toHaveProperty('title');
-            expect(workspace).toHaveProperty('description');
-            expect(workspace).toHaveProperty('is_private');
-            expect(workspace.is_private).toBe(false)
-        });
-    });
-    test('should return 401', async () => {
-        const response = await request(app).get('/workspaces/public');
-
-        expect(response.status).toBe(401);
-    });
-});
-
-describe('DELETE /workspaces/{workspace_id}', () => {
-    test('should delete a workspace by ID', async () => {
-        const response = await request(app).delete(`/workspaces/${id}`).set("Authorization", await getToken());
+    test('should delete variable', async () => {
+        const response = await request(app)
+            .delete('/workspaces/1/variables/test')
+            .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
-    });
-    test('should delete a workspace by ID', async () => {
-        const response = await request(app).delete(`/workspaces/${id}`);
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
 
-        expect(response.status).toBe(401);
+        expect(response2.status).toBe(200)
+        expect(Object.keys(response2.body.variables).length).toEqual(0)
     });
-});
+})
+
+describe('/workspaces/:id/users', () => {
+    test('should add user to workspace', async () => {
+        const response = await request(app)
+            .post('/workspaces/1/users')
+            .send({
+                "id": 1,
+                "permission": 2
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200)
+        expect(response2.body.users_id.length).toEqual(1)
+        expect(response2.body.users_id[0].id).toEqual(1)
+    });
+    test('should remove user from workspace', async () => {
+        const response = await request(app)
+            .delete('/workspaces/1/users/1')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200)
+        expect(response2.body.users_id.length).toEqual(0)
+    });
+})
+
+describe('POST /workspaces/:id/automate', () => {
+    test('should add automate to workspace', async () => {
+        const response = await request(app)
+            .post('/workspaces/1/automate')
+            .send({
+                "title": "automate1",
+                "is_private": true
+            })
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        const response2 = await request(app)
+            .get('/workspaces/1')
+            .set("Authorization", await getToken());
+
+        expect(response2.status).toBe(200)
+        expect(response2.body.automates.length).toBeGreaterThanOrEqual(2)
+    });
+})
+
+describe('GET /workspaces/search/:input', () => {
+    test('should find workspaces', async () => {
+        const response = await request(app)
+            .get('/workspaces/search/title')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body.length).toBeGreaterThanOrEqual(2)
+    });
+    test('should get nothing', async () => {
+        const response = await request(app)
+            .get('/workspaces/search/zzzzz')
+            .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body).toHaveLength(0);
+    });
+})
