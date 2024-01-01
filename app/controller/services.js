@@ -594,6 +594,11 @@ export default function index(app) {
     app.get('/service/connect/:id_service/:authorization', async (request, response) => {
         let payload = getPayload("Bearer " + request.params.authorization);
         let id_service = request.params.id_service;
+        try {
+          id_service = parseInt(id_service);
+        } catch (e) {
+          return BadRequest(response)
+        }
         let service = await getServicesById(id_service)
 
         if (!service) return NotFound(response)
@@ -608,6 +613,12 @@ export default function index(app) {
     app.get('/service/callback', async (request, response) => {
         let code = request.query.code;
         let [id_service, user_id] = request.query.state.split(',');
+        try {
+          id_service = parseInt(id_service)
+          user_id = parseInt(user_id)
+        } catch (e) {
+          return BadRequest(response)
+        }
         let service = await getServicesById(id_service)
 
         if (!service) return NotFound(response)
@@ -622,7 +633,7 @@ export default function index(app) {
         query.append('code', code);
         const data = await fetch(service.dataValues.token_url, { method: "POST", body: query }).then(response => response.json());
         let user = await getUserById(user_id)
-        let services = JSON.parse(user.dataValues.services)
+        let services = user.services
         services[service.dataValues.name] = data
         await updateUser(user_id, {
             services

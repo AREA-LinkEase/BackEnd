@@ -57,7 +57,7 @@ export async function connectDatabase(isTest = false) {
                 console.log(e)
             }
         }
-        if (process.env.DIALECT === 'sqlite' || process.env.DIALECT === undefined) {
+        if (isTest || process.env.DIALECT === 'sqlite' || process.env.DIALECT === undefined) {
             sequelizeInstance = new Sequelize({
                 dialect: 'sqlite',
                 storage: ((isTest) ? './test.sqlite' : './app.sqlite'),
@@ -76,14 +76,14 @@ export async function connectDatabase(isTest = false) {
         }
         await sequelizeInstance.sync()
         let { User } = await import("./model/users.js");
-        let { Workspace } = await import("./model/workspaces.js")
-        let { Automate } = await import("./model/automates.js")
-        let { Services } = await import("./model/services.js")
-        let { Events } = await import("./model/events.js")
         await User.sync()
+        let { Workspace } = await import("./model/workspaces.js")
         await Workspace.sync()
+        let { Automate } = await import("./model/automates.js")
         await Automate.sync()
+        let { Services } = await import("./model/services.js")
         await Services.sync()
+        let { Events } = await import("./model/events.js")
         await Events.sync()
         try {
             await sequelizeInstance.authenticate()
