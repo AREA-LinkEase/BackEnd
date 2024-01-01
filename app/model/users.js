@@ -201,4 +201,38 @@ export async function searchUser(input) {
     return [...part1, ...part2]
 }
 
+/**
+ * @function
+ * @async
+ * @description Get access token for a specific service.
+ * @param {number} userId - The ID of the authenticated user.
+ * @param {number} serviceId - The ID of the service for which the access token is requested.
+ * @returns {Promise<AccessTokenResponse>} The access token response.
+ * @throws {ErrorResponse} Error response in case of any issues.
+ */
+export async function getAccessToken(userId, serviceId) {
+    let { getServicesById } = await import("./services.js")
+    let service = await getServicesById(serviceId);
+    if (service === null) throw "undefined service"
+    let user = await getUserById(userId);
+    if (user === null) throw "undefined user"
+    let refreshToken = user.services[service.name]?.refresh_token;
+    if (refreshToken === undefined) throw "undefined refresh token"
+    const query = new URLSearchParams();
+    query.append('client_id', service.client_id);
+    query.append('client_secret', service.client_secret);
+    query.append('grant_type', 'refresh_token');
+    query.append('refresh_token', refreshToken);
+    const data = await fetch(service.token_url, {method: "POST", body: query, headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }}).then(response => response.json());
+    if ("error" in data) throw "error while refreshing token"
+    if ("refresh_token" in data) {
+        let services = user.services;
+        services[service.name] = data;
+        user.update({services})
+    }
+    return data.access_token
+}
+
 export { User }
