@@ -164,3 +164,11 @@ describe('GET /users/search/{input}', () => {
         expect(response.status).toBe(401);
     });
 });
+
+describe('GET /users/@me/services/access_token/:id', () => {
+    test('should response 401', async () => {
+        const response = await request(app).get(`/users/@me/services/access_token/1`)
+
+        expect(response.status).toBe(401);
+    });
+});

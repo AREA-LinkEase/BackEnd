@@ -1,4 +1,5 @@
 import {
+    getAccessToken,
     getUserById,
     searchUser,
     updateUser
@@ -259,7 +260,91 @@ import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_e
  *         - email
  */
 
+/**
+ * @swagger
+ * /users/@me/services/access_token/{id}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get Access Token for a specific service.
+ *     description: Retrieve the access token for a specific service associated with the authenticated user.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: The ID of the service for which the access token is requested.
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successful response with the access token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                   description: The retrieved access token.
+ *       '401':
+ *         description: Unauthorized. Invalid or missing Bearer token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Description of the unauthorized error.
+ *       '403':
+ *         description: Forbidden. The authenticated user does not have access to the requested service.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Description of the forbidden error.
+ *       '500':
+ *         description: Internal Server Error. An unexpected error occurred.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Description of the internal server error.
+ */
+
+/**
+ * @typedef {Object} AccessTokenResponse
+ * @property {string} access_token - The retrieved access token.
+ */
+
+/**
+ * @typedef {Object} ErrorResponse
+ * @property {string} error - Description of the error.
+ */
+
 export default function index(app) {
+    app.get('/users/@me/services/access_token/:id', async (request, response) => {
+        try {
+            let serviceId = parseInt(request.params.id);
+            let userId = response.locals.user.id;
+            try {
+                let accessToken = await getAccessToken(userId, serviceId);
+                return response.status(200).json({"access_token": accessToken})
+            } catch (e) {
+                return response.status(200).json({"error": e})
+            }
+        } catch (error) {
+            console.log(error)
+            return InternalError(response)
+        }
+    })
     app.get('/users/@me', async (request, response) => {
         try {
             return response.status(200).json(response.locals.user)
