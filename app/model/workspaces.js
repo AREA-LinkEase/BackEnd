@@ -1,6 +1,7 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
+import { getRandomColor } from '../utils/get_color.js';
 
 /**
  * @typedef {Object} WorkspaceModel
@@ -126,7 +127,10 @@ export async function createWorkspace(title, description, is_private, users_id, 
         description: description,
         is_private: is_private,
         users_id: users_id,
-        owner_id: owner_id
+        owner_id: owner_id,
+        variables: {
+            color: getRandomColor()
+        }
     })
 }
 

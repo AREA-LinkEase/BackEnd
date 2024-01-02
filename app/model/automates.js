@@ -124,7 +124,10 @@ export async function createAutomate(title, is_private, workspace_id) {
     return await Automate.create({
         title,
         is_private,
-        workspace_id
+        workspace_id,
+        variables: {
+            color: getRandomColor()
+        }
     })
 }
 
