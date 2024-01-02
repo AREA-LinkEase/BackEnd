@@ -2,6 +2,7 @@ import {Conflict, InternalError, NotFound, Unauthorized, UnprocessableEntity} fr
 import {checkPassword, hashPassword} from "../utils/hash_password.js";
 import {createDefaultUser, getUserByEmail, getUserByUsername} from "../model/users.js";
 import jwt from "jsonwebtoken";
+import {generateAndSaveImage} from "../utils/generateAndSaveImage.js";
 
 
 /**
@@ -92,11 +93,12 @@ export default function index(app) {
             user = await getUserByUsername(body.username)
             if (user) return Conflict(response)
             let hashed_password = await hashPassword(body.password)
-            await createDefaultUser(
+            let newUser = await createDefaultUser(
                 body.username,
                 body.email,
                 hashed_password,
             )
+            await generateAndSaveImage(body.username, newUser.id);
             return response.status(201).json({result: "User created successfully"})
         } catch (error) {
             InternalError(response)
