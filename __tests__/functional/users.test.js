@@ -1,10 +1,11 @@
 import request from 'supertest';
 import { app } from '../../config/express.js';
 import {setupTest} from "../../testBase.js";
-import {afterAll, beforeAll, describe, expect, test} from '@jest/globals';
+import {afterAll, beforeAll, describe, expect, jest, test} from '@jest/globals';
 import {getSequelize} from "../../app/getDataBaseConnection.js";
 
 beforeAll(async () => {
+    jest.setTimeout(60000)
     await setupTest()
 });
 
@@ -170,5 +171,20 @@ describe('GET /users/@me/services/access_token/:id', () => {
         const response = await request(app).get(`/users/@me/services/access_token/1`)
 
         expect(response.status).toBe(401);
+    });
+});
+
+describe('PUT /users/@me/avatar', () => {
+    test('should upload the image', async () => {
+        const response = await request(app)
+          .put('/users/@me/avatar')
+          .attach('avatar', __dirname + '/test_picture.png')
+          .set("Authorization", token);
+
+        expect(response.status).toBe(200)
+        const response2 = await request(app)
+          .get("/assets/avatars/1.png")
+
+        expect(response2.status).toBe(200)
     });
 });

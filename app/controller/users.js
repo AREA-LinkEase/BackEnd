@@ -6,6 +6,10 @@ import {
 } from "../model/users.js"
 import { hashPassword } from "../utils/hash_password.js"
 import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
+import * as path from "path";
+import sharp from "sharp";
+import {upload} from "../../config/multer.js";
+import * as fs from 'fs'
 
 /**
  * @swagger
@@ -329,6 +333,63 @@ import { InternalError, NotFound, UnprocessableEntity } from "../utils/request_e
  * @property {string} error - Description of the error.
  */
 
+/**
+ * @swagger
+ * /users/@me/avatar:
+ *   put:
+ *     summary: Update user avatar
+ *     description: Update the avatar of the currently authenticated user.
+ *     tags:
+ *       - Users
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Successful update of user avatar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Result message
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       422:
+ *         description: Unprocessable Entity
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Error message
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 result:
+ *                   type: string
+ *                   description: Error message
+ */
+
 export default function index(app) {
     app.get('/users/@me/services/access_token/:id', async (request, response) => {
         try {
@@ -343,6 +404,28 @@ export default function index(app) {
         } catch (error) {
             console.log(error)
             return InternalError(response)
+        }
+    })
+    app.put('/users/@me/avatar', upload.single('avatar'), async (request, response) => {
+        try {
+            if (!request.file) return UnprocessableEntity(response)
+
+            const filename = `${response.locals.user.id}.png`;
+            const outputPath = path.join(process.cwd(), 'public/avatars', filename);
+
+            if (fs.existsSync(outputPath)) {
+                fs.unlinkSync(outputPath);
+            }
+
+            await sharp(request.file.buffer)
+              .resize(256, 256)
+              .toFormat('png')
+              .toFile(outputPath);
+
+            response.status(200).send({ result: 'User changed successfully' });
+        } catch (error) {
+            console.log(error)
+            response.status(500).send({ result: error.message });
         }
     })
     app.get('/users/@me', async (request, response) => {
