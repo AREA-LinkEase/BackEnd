@@ -77,6 +77,11 @@ const Workspace = getSequelize().define('workspaces', {
         allowNull: false,
         defaultValue: true,
     },
+    color: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "#007BFF"
+    }
 });
 
 /**
@@ -128,9 +133,7 @@ export async function createWorkspace(title, description, is_private, users_id, 
         is_private: is_private,
         users_id: users_id,
         owner_id: owner_id,
-        variables: {
-            color: getRandomColor()
-        }
+        color: getRandomColor()
     })
 }
 
