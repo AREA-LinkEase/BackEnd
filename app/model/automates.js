@@ -1,6 +1,7 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {Workspace} from "./workspaces.js";
+import { getRandomColor } from '../utils/get_color.js';
 
 const Automate = getSequelize().define('automates', {
     /**
