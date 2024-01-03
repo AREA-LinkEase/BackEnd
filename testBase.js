@@ -11,7 +11,7 @@ app.set('view engine', 'ejs')
 // Set the directory where views are located
 app.set('views', './app/view')
 // Serve static files from the 'Public' directory under the '/Assets' path
-app.use('/Assets', root.static('Public'))
+app.use('/assets', root.static('public'))
 // Parse incoming requests with urlencoded payloads
 app.use(root.urlencoded({extended: true}))
 // Parse incoming requests with JSON payloads

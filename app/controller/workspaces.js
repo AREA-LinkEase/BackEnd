@@ -746,13 +746,15 @@ export default function index(app) {
             if (workspace.owner_id !== user_id &&
                 workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
-            if (!['title', 'is_private'].every((property) => body[property] !== undefined))
+            if (!['title', 'is_private', 'description'].every((property) => body[property] !== undefined))
                 return UnprocessableEntity(response)
             if (typeof body['title'] !== "string")
                 return UnprocessableEntity(response)
             if (typeof body['is_private'] !== "boolean")
                 return UnprocessableEntity(response)
-            await createAutomate(body['title'], body['is_private'], workspace_id)
+            if (typeof body['description'] !== "string")
+                return UnprocessableEntity(response)
+            await createAutomate(body['title'], body['is_private'], body['description'], workspace_id)
             return response.status(200).json({result: "Automate has been created successfully"})
         } catch(error) {
             console.log(error)
@@ -810,7 +812,8 @@ export default function index(app) {
                     title: workspace.title,
                     description: workspace.description,
                     owner_id: workspace.owner_id,
-                    views: workspace.views
+                    views: workspace.views,
+                    color: workspace.color
                 })
             }
             return response.status(200).json(results)

@@ -14,11 +14,13 @@ export function getSequelize() {
 
 /**
  * Feed the database with initial data for testing purposes.
- * @param {Model} User - The User model.
- * @param {Model} Automate - The Automate model.
- * @param {Model} Workspace - The Workspace model.
+ * @param {User} User - The User model.
+ * @param {Automate} Automate - The Automate model.
+ * @param {Workspace} Workspace - The Workspace model.
+ * @param {Events} Events - The Events model.
+ * @param {Services} Services - The Events model.
  */
-async function feedDatabase(User, Automate, Workspace) {
+async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create user
     await User.create({
         password: await hashPassword("user created with jest"),
@@ -39,6 +41,23 @@ async function feedDatabase(User, Automate, Workspace) {
         is_private: false,
         workspace_id: 1,
         logs: ["test"]
+    })
+    // Create service
+    await Services.create({
+        name: "aaaaaa",
+        client_id: "aaaaaa",
+        client_secret: "aaaaaaa",
+        scope: "aaaaaaaaa",
+        auth_url: "aaaaaaa",
+        token_url: "aaaaaaa",
+        owner_id: 1,
+        users_id: []
+    })
+    // Create event
+    await Events.create({
+        name: "aaaaaa",
+        service_id: 1,
+        type: "action"
     })
 }
 
