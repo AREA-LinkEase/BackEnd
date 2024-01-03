@@ -82,6 +82,11 @@ const Automate = getSequelize().define('automates', {
             this.setDataValue('logs', JSON.stringify(value));
         }
     },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ""
+    }
 });
 
 /**
@@ -124,6 +129,7 @@ export async function createAutomate(title, is_private, workspace_id) {
     return await Automate.create({
         title,
         is_private,
+        description,
         workspace_id
     })
 }
