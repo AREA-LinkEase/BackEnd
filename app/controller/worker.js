@@ -1,7 +1,9 @@
 import {getAutomateById} from "../model/automates.js";
-import {InternalError, NotFound} from "../utils/request_error.js";
+import {Forbidden, InternalError, NotFound} from "../utils/request_error.js";
 import {getWorkspaceById} from "../model/workspaces.js";
 import {getUserById} from "../model/users.js";
+import {getServicesById} from "../model/services.js";
+import {getEventById, getTriggersByServiceId} from "../model/events.js";
 
 /**
  * @swagger
@@ -131,6 +133,40 @@ import {getUserById} from "../model/users.js";
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
+/**
+ * @swagger
+ * /worker/events/{id}/workflow:
+ *   get:
+ *     tags: [Worker]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     summary: Get the workflow for a worker event by ID.
+ *     description: |
+ *       This endpoint allows authorized workers to retrieve the workflow associated with a worker event by its ID.
+ *       A special token for workers is required to access this route.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The ID of the worker event.
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Successful response with the workflow.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               description: The workflow associated with the worker event.
+ *       401:
+ *         description: Unauthorized. Special worker token is required.
+ *       403:
+ *         description: Forbidden. Access to this route is not allowed.
+ *       500:
+ *         description: Internal Server Error. An error occurred while processing the request.
+ */
+
 
 let id = 0;
 
@@ -173,6 +209,18 @@ export default function index(app) {
             })
         } catch (e) {
             console.log(e)
+            return InternalError(response)
+        }
+    })
+    app.get("/worker/events/:id/workflow", async (request, response) => {
+        try {
+            let event_id = parseInt(request.params.id);
+            let event = await getEventById(event_id);
+
+            if (event === null)
+                return NotFound(response)
+            return response.status(200).json(event.workflow)
+        } catch (error) {
             return InternalError(response)
         }
     })

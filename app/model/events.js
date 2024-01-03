@@ -89,6 +89,20 @@ export async function getActionsByServiceId(id) {
 }
 
 /**
+ * Retrieves all events associated with a given service ID.
+ *
+ * @param {number} id - The ID of the service.
+ * @returns {Promise<Event[]>} - A promise that resolves to an array of events.
+ */
+export async function getEventsByServiceId(id) {
+    return Events.findAll({
+        where: {
+            service_id: id
+        }
+    })
+}
+
+/**
  * Retrieves an event by its ID.
  *
  * @param {number} id - The ID of the event.
