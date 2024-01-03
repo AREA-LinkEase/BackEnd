@@ -251,7 +251,8 @@ describe('POST /workspaces/:id/automate', () => {
             .post('/workspaces/1/automate')
             .send({
                 "title": "automate1",
-                "is_private": true
+                "is_private": true,
+                "description": "random_desc"
             })
             .set("Authorization", await getToken());
 

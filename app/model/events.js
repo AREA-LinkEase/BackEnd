@@ -56,6 +56,11 @@ const Events = getSequelize().define('events', {
         },
         comment: 'action | trigger',
     },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ""
+    }
 });
 
 /**
@@ -89,6 +94,20 @@ export async function getActionsByServiceId(id) {
 }
 
 /**
+ * Retrieves all events associated with a given service ID.
+ *
+ * @param {number} id - The ID of the service.
+ * @returns {Promise<Event[]>} - A promise that resolves to an array of events.
+ */
+export async function getEventsByServiceId(id) {
+    return Events.findAll({
+        where: {
+            service_id: id
+        }
+    })
+}
+
+/**
  * Retrieves an event by its ID.
  *
  * @param {number} id - The ID of the event.
@@ -109,10 +128,11 @@ export async function getEventById(id) {
  * @param {string} type - The type of the event ('action' or 'trigger').
  * @param {number} service_id - The ID of the associated service.
  */
-export async function createEvent(name, type, service_id) {
+export async function createEvent(name, type, description, service_id) {
     await Events.create({
         name,
         type,
+        description,
         service_id
     })
 }

@@ -2,7 +2,13 @@ import {createService, getAllServicesById, getServicesById, searchServices} from
 import {getUserById, updateUser} from "../model/users.js";
 import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
-import {createEvent, getActionsByServiceId, getEventById, getTriggersByServiceId} from "../model/events.js";
+import {
+  createEvent,
+  getActionsByServiceId,
+  getEventById,
+  getEventsByServiceId,
+  getTriggersByServiceId
+} from "../model/events.js";
 
 /**
  * @swagger
@@ -813,11 +819,12 @@ export default function index(app) {
                 return NotFound(response)
             if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
-            if (!("name" in body) || !("type" in body) || typeof body["name"] !== "string")
+            if (!("name" in body) || !("type" in body) || !("description" in body) || typeof body["name"] !== "string"
+                || typeof body["description"] !== "string")
                 return UnprocessableEntity(response)
             if (body["type"] !== "trigger" && body["type"] !== "action")
                 return UnprocessableEntity(response)
-            await createEvent(body["name"], body["type"], service_id)
+            await createEvent(body["name"], body["type"], body["description"], service_id)
             return response.status(200).json({result: "Event has been created successfully"})
         } catch (error) {
             console.log(error)
@@ -916,6 +923,9 @@ export default function index(app) {
                 return Forbidden(response)
             if (service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
+            let events = await getEventsByServiceId(service_id);
+            for (const event of events)
+              await event.destroy()
             await service.destroy()
             return response.status(200).json({result: "Service has been deleted successfully"})
         } catch (error) {

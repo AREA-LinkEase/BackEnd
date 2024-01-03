@@ -10,7 +10,7 @@ import { getRandomColor } from '../utils/get_color.js';
  * @property {string} description - Description of the workspace.
  * @property {boolean} is_private - Indicates whether the workspace is private or not.
  * @property {number} owner_id - User ID of the owner of the workspace.
- * @property {string} users_id - JSON string representing an array of users and their permissions.
+ * @property {Array} users_id - JSON string representing an array of users and their permissions.
  * @property {string} variables - JSON string representing variables associated with the workspace.
  * @property {number} views - Number of views the workspace has.
  * @property {boolean} is_enabled - Indicates whether the workspace is enabled or not.
