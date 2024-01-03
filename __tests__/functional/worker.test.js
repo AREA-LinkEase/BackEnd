@@ -49,3 +49,19 @@ describe('GET /worker/@next', () => {
         expect(response.status).toBe(401);
     });
 });
+
+describe('GET /worker/events/:id/workflow', () => {
+    test('should get next automate', async () => {
+        const response = await request(app)
+          .get('/worker/events/' + 1 + '/workflow')
+          .set("Authorization", process.env.WORKER_KEY);
+
+        expect(response.status).toBe(200);
+    });
+    test('should response 401', async () => {
+        const response = await request(app)
+          .get('/worker/events/' + 1 + '/workflow');
+
+        expect(response.status).toBe(401);
+    });
+});

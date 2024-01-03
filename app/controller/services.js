@@ -2,7 +2,13 @@ import {createService, getAllServicesById, getServicesById, searchServices} from
 import {getUserById, updateUser} from "../model/users.js";
 import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
-import {createEvent, getActionsByServiceId, getEventById, getTriggersByServiceId} from "../model/events.js";
+import {
+  createEvent,
+  getActionsByServiceId,
+  getEventById,
+  getEventsByServiceId,
+  getTriggersByServiceId
+} from "../model/events.js";
 
 /**
  * @swagger
@@ -916,6 +922,9 @@ export default function index(app) {
                 return Forbidden(response)
             if (service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
+            let events = await getEventsByServiceId(service_id);
+            for (const event of events)
+              await event.destroy()
             await service.destroy()
             return response.status(200).json({result: "Service has been deleted successfully"})
         } catch (error) {
