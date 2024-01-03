@@ -1,9 +1,8 @@
 import {getAutomateById} from "../model/automates.js";
-import {Forbidden, InternalError, NotFound} from "../utils/request_error.js";
+import {InternalError, NotFound} from "../utils/request_error.js";
 import {getWorkspaceById} from "../model/workspaces.js";
 import {getUserById} from "../model/users.js";
-import {getServicesById} from "../model/services.js";
-import {getEventById, getTriggersByServiceId} from "../model/events.js";
+import {getEventById} from "../model/events.js";
 
 /**
  * @swagger
