@@ -82,6 +82,11 @@ const Automate = getSequelize().define('automates', {
             this.setDataValue('logs', JSON.stringify(value));
         }
     },
+    color: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "#007BFF"
+    }
 });
 
 /**
@@ -125,9 +130,7 @@ export async function createAutomate(title, is_private, workspace_id) {
         title,
         is_private,
         workspace_id,
-        variables: {
-            color: getRandomColor()
-        }
+        color: getRandomColor()
     })
 }
 
