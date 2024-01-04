@@ -172,6 +172,7 @@ describe('Create event', () => {
             .post('/services/1/events')
             .send({
                 "name": "testAction",
+                "description": "description",
                 "type": "action"
             })
             .set("Authorization", await getToken());
@@ -188,6 +189,7 @@ describe('Create event', () => {
         expect(response.body.length).toBeGreaterThanOrEqual(1);
         response.body.forEach((action) => {
             expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("description")
             expect(action).toHaveProperty("service_id")
             expect(action).toHaveProperty("id")
             expect(action).toHaveProperty("workflow")
@@ -200,6 +202,7 @@ describe('Create event', () => {
             .post('/services/1/events')
             .send({
                 "name": "testTrigger",
+                "description": "description",
                 "type": "trigger"
             })
             .set("Authorization", await getToken());
@@ -216,6 +219,7 @@ describe('Create event', () => {
         expect(response.body.length).toBeGreaterThanOrEqual(1);
         response.body.forEach((action) => {
             expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("description")
             expect(action).toHaveProperty("service_id")
             expect(action).toHaveProperty("id")
             expect(action).toHaveProperty("workflow")
