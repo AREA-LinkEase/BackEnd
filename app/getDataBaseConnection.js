@@ -58,6 +58,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create event
     await Events.create({
         name: "aaaaaa",
+        description: "description",
         service_id: 1,
         type: "action"
     })
