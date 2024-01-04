@@ -14,6 +14,7 @@ import { getRandomColor } from '../utils/get_color.js';
  * @property {string} variables - JSON string representing variables associated with the workspace.
  * @property {number} views - Number of views the workspace has.
  * @property {boolean} is_enabled - Indicates whether the workspace is enabled or not.
+ * @property {string} color - Color of the workspace.
  */
 
 const Workspace = getSequelize().define('workspaces', {

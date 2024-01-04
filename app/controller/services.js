@@ -819,12 +819,11 @@ export default function index(app) {
                 return NotFound(response)
             if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
-            if (!("name" in body) || !("type" in body) || !("description" in body) || typeof body["name"] !== "string"
-                || typeof body["description"] !== "string")
+            if (!("name" in body) || !("type" in body) || typeof body["name"] !== "string")
                 return UnprocessableEntity(response)
             if (body["type"] !== "trigger" && body["type"] !== "action")
                 return UnprocessableEntity(response)
-            await createEvent(body["name"], body["type"], body["description"], service_id)
+            await createEvent(body["name"], body["type"], service_id)
             return response.status(200).json({result: "Event has been created successfully"})
         } catch (error) {
             console.log(error)

@@ -44,7 +44,6 @@ describe('/automates/:id', () => {
         expect(response.body).toHaveProperty('workflow');
         expect(response.body).toHaveProperty('variables');
         expect(response.body).toHaveProperty('color');
-        expect(response.body).toHaveProperty('description');
     });
     test('should edit title of automate', async () => {
         const response = await request(app)
