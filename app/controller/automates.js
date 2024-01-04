@@ -313,8 +313,7 @@ export default function index(app) {
                     title: automate.title,
                     workflow: automate.workflow,
                     workspace_id: automate.workspace_id,
-                    views: automate.views,
-                    color: automate.color
+                    views: automate.views
                 })
             }
             return response.status(200).json(results)
@@ -411,9 +410,7 @@ export default function index(app) {
                     workspace_id: automate.workspace_id,
                     is_enabled: automate.is_enabled,
                     views: automate.views,
-                    workflow: automate.workflow,
-                    color: automate.color,
-                    description: automate.description
+                    workflow: automate.workflow
                 })
             }
             return response.status(200).json(automate.toJSON())

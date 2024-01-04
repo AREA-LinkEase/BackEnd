@@ -9,6 +9,10 @@ import {
   getEventsByServiceId,
   getTriggersByServiceId
 } from "../model/events.js";
+import {upload} from "../../config/multer.js";
+import path from "path";
+import fs from "fs";
+import sharp from "sharp";
 
 /**
  * @swagger
@@ -692,8 +696,9 @@ export default function index(app) {
             return InternalError(response)
         }
     })
-    app.post('/services/@me', async (request, response) => {
+    app.post('/services/@me', upload.single('image'), async (request, response) => {
         try {
+            if (!request.file) return UnprocessableEntity(response)
             let body = request.body;
             let user_id = response.locals.user.id;
             if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url', 'is_private']
@@ -702,9 +707,11 @@ export default function index(app) {
             if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url']
                 .every((property) => typeof body[property] === "string"))
                 return UnprocessableEntity(response)
+            if (typeof body["is_private"] === "string")
+                body["is_private"] = body["is_private"] === "true"
             if (typeof body["is_private"] !== "boolean")
                 return UnprocessableEntity(response)
-            await createService(
+            let service = await createService(
                 body["name"],
                 body["client_id"],
                 body["client_secret"],
@@ -714,6 +721,18 @@ export default function index(app) {
                 user_id,
                 body["is_private"]
             )
+
+            const filename = `${service.id}.png`;
+            const outputPath = path.join(process.cwd(), 'public/services', filename);
+
+            if (fs.existsSync(outputPath)) {
+              fs.unlinkSync(outputPath);
+            }
+
+            await sharp(request.file.buffer)
+              .resize(256, 256)
+              .toFormat('png')
+              .toFile(outputPath);
             return response.status(200).json({result: "Service has been created successfully"});
         } catch (error) {
             return InternalError(response)
@@ -819,12 +838,11 @@ export default function index(app) {
                 return NotFound(response)
             if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
-            if (!("name" in body) || !("type" in body) || !("description" in body) || typeof body["name"] !== "string"
-                || typeof body["description"] !== "string")
+            if (!("name" in body) || !("type" in body) || typeof body["name"] !== "string")
                 return UnprocessableEntity(response)
             if (body["type"] !== "trigger" && body["type"] !== "action")
                 return UnprocessableEntity(response)
-            await createEvent(body["name"], body["type"], body["description"], service_id)
+            await createEvent(body["name"], body["type"], service_id)
             return response.status(200).json({result: "Event has been created successfully"})
         } catch (error) {
             console.log(error)

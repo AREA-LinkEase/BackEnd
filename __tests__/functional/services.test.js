@@ -34,15 +34,14 @@ describe('/services/@me', () => {
     test('should create a service', async () => {
         const response = await request(app)
             .post('/services/@me')
-            .send({
-                "name": "test",
-                "client_id": "test",
-                "client_secret": "test",
-                "scope": "test",
-                "auth_url": "test",
-                "token_url": "test",
-                "is_private": false
-            })
+            .field("name", "test")
+            .field("client_id", "test")
+            .field("client_secret", "test")
+            .field("scope", "test")
+            .field("auth_url", "test")
+            .field("token_url", "test")
+            .field("is_private", false)
+            .attach('image', __dirname + '/test_picture.png')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
