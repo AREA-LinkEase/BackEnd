@@ -7,6 +7,7 @@ const Automate = getSequelize().define('automates', {
      * @typedef {Object} AutomateAttributes
      * @property {number} id - Primary key, auto-incremented integer.
      * @property {string} title - Title of the automate, cannot be null.
+     * @property {string} description - description of the automate, cannot be null.
      * @property {boolean} is_private - Indicates whether the automate is private or not.
      * @property {number} workspace_id - Foreign key referencing the Workspace model.
      * @property {Object} workflow - JSON representation of the automate's workflow.
@@ -23,6 +24,10 @@ const Automate = getSequelize().define('automates', {
         allowNull: false,
     },
     title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    description: {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -116,13 +121,15 @@ export async function getAutomateById(id) {
  * Create a new automate.
  *
  * @param {string} title - Title of the automate.
+ * @param {string} description - Description of the automate.
  * @param {boolean} is_private - Indicates whether the automate is private or not.
  * @param {number} workspace_id - ID of the workspace.
  * @returns {Promise<AutomateAttributes>} - Promise resolving to the created automate.
  */
-export async function createAutomate(title, is_private, workspace_id) {
+export async function createAutomate(title, description, is_private, workspace_id) {
     return await Automate.create({
         title,
+        description,
         is_private,
         workspace_id
     })
