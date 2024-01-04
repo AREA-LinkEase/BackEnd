@@ -1,8 +1,9 @@
 import {getAutomateById} from "../model/automates.js";
 import {InternalError, NotFound} from "../utils/request_error.js";
 import {getWorkspaceById} from "../model/workspaces.js";
-import {getUserById} from "../model/users.js";
+import {getAccessToken, getUserById} from "../model/users.js";
 import {getEventById} from "../model/events.js";
+import {getServiceByName} from "../model/services.js";
 
 /**
  * @swagger
@@ -200,6 +201,18 @@ export default function index(app) {
             users.push(await getUserById(workspace.owner_id))
             for (const user_id of workspace.users_id)
                 users.push(await getUserById(user_id))
+
+            for (const user of users) {
+                let tokens = {}
+
+                for (const serviceName of Object.keys(user.services)) {
+                    let service = await getServiceByName(serviceName)
+                    let accessToken= await getAccessToken(user.id, service.id)
+                    if (accessToken)
+                        tokens[serviceName] = accessToken
+                }
+                user.tokens = tokens;
+            }
 
             return response.status(200).json({
                 "users": users,

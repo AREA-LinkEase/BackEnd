@@ -96,10 +96,10 @@ export async function getServicesById(id) {
  * @param {string} token_url - Token URL.
  * @param {number} owner_id - The ID of the owner user.
  * @param {boolean} is_private - Indicates if the service is private.
- * @returns {Promise<void>} - A promise that resolves when the service is created.
+ * @returns {Promise<Services>} - A promise that resolves when the service is created.
  */
 export async function createService(name, client_id, client_secret, scope, auth_url, token_url, owner_id, is_private) {
-    await Services.create({
+    return await Services.create({
         name,
         client_id,
         client_secret,
