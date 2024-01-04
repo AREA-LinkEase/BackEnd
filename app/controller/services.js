@@ -116,7 +116,7 @@ import sharp from "sharp";
  *         description: OK. Returns the list of services matching the search.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": true}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the search.
  */
@@ -136,7 +136,7 @@ import sharp from "sharp";
  *         description: OK. Returns the list of public services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": false}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": false}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -156,7 +156,7 @@ import sharp from "sharp";
  *         description: OK. Returns the list of private services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 3, "name": "PrivateService1", "is_private": true}, {"id": 4, "name": "PrivateService2", "is_private": true}]
+ *             example: [{"id": 3, "name": "PrivateService1", "description": "description", "is_private": true}, {"id": 4, "name": "PrivateService2", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -176,7 +176,7 @@ import sharp from "sharp";
  *         description: OK. Returns the list of all services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": false}, {"id": 3, "name": "PrivateService1", "is_private": true}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": false}, {"id": 3, "name": "PrivateService1", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -195,7 +195,7 @@ import sharp from "sharp";
  *       required: true
  *       content:
  *         application/json:
- *           example: {"name": "NewService", "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token", "is_private": false}
+ *           example: {"name": "NewService", "description": "description", "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token", "is_private": false}
  *     responses:
  *       '200':
  *         description: OK. Service has been created successfully.
@@ -519,7 +519,7 @@ import sharp from "sharp";
  *         description: OK. Returns details of the service.
  *         content:
  *           application/json:
- *             example: {"id": 1, "name": "Service1", "is_private": false, "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token"}
+ *             example: {"id": 1, "name": "Service1", "description": "description", "is_private": false, "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token"}
  *       '403':
  *         description: Forbidden. Access to the service is not allowed.
  *       '404':
@@ -549,7 +549,7 @@ import sharp from "sharp";
  *       required: true
  *       content:
  *         application/json:
- *           example: {"name": "UpdatedService", "client_id": "updated123", "client_secret": "updatedsecret123", "scope": "updated read write", "auth_url": "https://updatedexample.com/auth", "token_url": "https://updatedexample.com/token", "is_private": true}
+ *           example: {"name": "UpdatedService", "description": "description", "client_id": "updated123", "client_secret": "updatedsecret123", "scope": "updated read write", "auth_url": "https://updatedexample.com/auth", "token_url": "https://updatedexample.com/token", "is_private": true}
  *     responses:
  *       '200':
  *         description: OK. Service has been updated successfully.
@@ -701,10 +701,10 @@ export default function index(app) {
             if (!request.file) return UnprocessableEntity(response)
             let body = request.body;
             let user_id = response.locals.user.id;
-            if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url', 'is_private']
+            if (!['name', 'description', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url', 'is_private']
                 .every((property) => body[property] !== undefined))
                 return UnprocessableEntity(response)
-            if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url']
+            if (!['name', 'description', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url']
                 .every((property) => typeof body[property] === "string"))
                 return UnprocessableEntity(response)
             if (typeof body["is_private"] === "string")
@@ -713,6 +713,7 @@ export default function index(app) {
                 return UnprocessableEntity(response)
             let service = await createService(
                 body["name"],
+                body["description"],
                 body["client_id"],
                 body["client_secret"],
                 body["scope"],
@@ -922,7 +923,7 @@ export default function index(app) {
             if (service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
             if (!Object.keys(body).every((value) =>
-                ["name", "client_id", "client_secret", "scope", "auth_url", "token_url", "is_private"].includes(value)))
+                ["name", "description", "client_id", "client_secret", "scope", "auth_url", "token_url", "is_private"].includes(value)))
                 return UnprocessableEntity(response)
             await service.update(body)
             return response.status(200).json({result: "Service has been updated successfully"})

@@ -35,6 +35,7 @@ describe('/services/@me', () => {
         const response = await request(app)
             .post('/services/@me')
             .field("name", "test")
+            .field("description", "test")
             .field("client_id", "test")
             .field("client_secret", "test")
             .field("scope", "test")
@@ -55,6 +56,7 @@ describe('/services/@me', () => {
         expect(Array.isArray(response.body)).toBe(true);
         response.body.forEach((service) => {
             expect(service).toHaveProperty("name")
+            expect(service).toHaveProperty("description")
             expect(service).toHaveProperty("client_id")
             expect(service).toHaveProperty("client_secret")
             expect(service).toHaveProperty("scope")
@@ -89,6 +91,7 @@ describe('/services/:id', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("name")
+        expect(response.body).toHaveProperty("description")
         expect(response.body).toHaveProperty("client_id")
         expect(response.body).toHaveProperty("client_secret")
         expect(response.body).toHaveProperty("scope")
