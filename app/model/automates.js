@@ -87,6 +87,7 @@ const Automate = getSequelize().define('automates', {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "#007BFF"
+    },
     description: {
         type: DataTypes.STRING,
         allowNull: false,
