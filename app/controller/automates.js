@@ -4,7 +4,6 @@ import {
 } from "../model/automates.js"
 import {getWorkspaceById} from "../model/workspaces.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js";
-import {auto} from "openai/_shims/registry";
 
 /**
  * @swagger
