@@ -55,11 +55,6 @@ const Events = getSequelize().define('events', {
             isIn: [['action', 'trigger']],
         },
         comment: 'action | trigger',
-    },
-    description: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: ""
     }
 });
 
@@ -128,11 +123,10 @@ export async function getEventById(id) {
  * @param {string} type - The type of the event ('action' or 'trigger').
  * @param {number} service_id - The ID of the associated service.
  */
-export async function createEvent(name, type, description, service_id) {
+export async function createEvent(name, type, service_id) {
     await Events.create({
         name,
         type,
-        description,
         service_id
     })
 }

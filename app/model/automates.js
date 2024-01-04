@@ -15,6 +15,7 @@ const Automate = getSequelize().define('automates', {
      * @property {boolean} is_enabled - Indicates whether the automate is enabled.
      * @property {bigint} views - Number of views for the automate.
      * @property {Array} logs - JSON representation of the automate's logs.
+     * @property {string} color - Color of the automate, cannot be null.
      */
 
     id: {
@@ -87,10 +88,6 @@ const Automate = getSequelize().define('automates', {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "#007BFF"
-    description: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: ""
     }
 });
 
@@ -134,8 +131,8 @@ export async function createAutomate(title, is_private, workspace_id) {
     return await Automate.create({
         title,
         is_private,
-        color: getRandomColor(),
-        description
+        workspace_id,
+        color: getRandomColor()
     })
 }
 
