@@ -746,13 +746,13 @@ export default function index(app) {
             if (workspace.owner_id !== user_id &&
                 workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
-            if (!['title', 'is_private'].every((property) => body[property] !== undefined))
+            if (!['title', 'is_private', 'description'].every((property) => body[property] !== undefined))
                 return UnprocessableEntity(response)
-            if (typeof body['title'] !== "string")
+            if (typeof body['title'] !== "string" || typeof body['description'] !== "string")
                 return UnprocessableEntity(response)
             if (typeof body['is_private'] !== "boolean")
                 return UnprocessableEntity(response)
-            await createAutomate(body['title'], body['is_private'], workspace_id)
+            await createAutomate(body['title'], body['description'], body['is_private'], workspace_id)
             return response.status(200).json({result: "Automate has been created successfully"})
         } catch(error) {
             console.log(error)

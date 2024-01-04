@@ -38,6 +38,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create automate
     await Automate.create({
         title: "An automate",
+        description: "a description",
         is_private: false,
         workspace_id: 1,
         logs: ["test"]
