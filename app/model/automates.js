@@ -131,10 +131,11 @@ export async function getAutomateById(id) {
  * @param {number} workspace_id - ID of the workspace.
  * @returns {Promise<AutomateAttributes>} - Promise resolving to the created automate.
  */
-export async function createAutomate(title, is_private, workspace_id) {
+export async function createAutomate(title, is_private, workspace_id, description) {
     return await Automate.create({
         title,
         is_private,
+        workspace_id,
         color: getRandomColor(),
         description
     })
