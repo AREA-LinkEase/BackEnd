@@ -46,6 +46,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create service
     await Services.create({
         name: "aaaaaa",
+        description: "aaaaaa",
         client_id: "aaaaaa",
         client_secret: "aaaaaaa",
         scope: "aaaaaaaaa",
