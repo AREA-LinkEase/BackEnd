@@ -474,6 +474,8 @@ import {getUserById} from "../model/users.js";
  *           type: integer
  *         title:
  *           type: string
+ *         color:
+ *           type: string
  *         description:
  *           type: string
  *         is_private:
@@ -499,6 +501,8 @@ import {getUserById} from "../model/users.js";
  *       type: object
  *       properties:
  *         title:
+ *           type: string
+ *         color:
  *           type: string
  *         description:
  *           type: string
@@ -541,6 +545,8 @@ import {getUserById} from "../model/users.js";
  *       properties:
  *         title:
  *           type: string
+ *         color:
+ *           type: string
  *         description:
  *           type: string
  *         is_private:
@@ -553,6 +559,8 @@ import {getUserById} from "../model/users.js";
  *         id:
  *           type: integer
  *         title:
+ *           type: string
+ *         color:
  *           type: string
  *         description:
  *           type: string

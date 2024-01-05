@@ -1,6 +1,7 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
+import { getRandomColor } from '../utils/get_color.js';
 
 /**
  * @typedef {Object} WorkspaceModel
@@ -13,6 +14,7 @@ import {User} from "./users.js";
  * @property {string} variables - JSON string representing variables associated with the workspace.
  * @property {number} views - Number of views the workspace has.
  * @property {boolean} is_enabled - Indicates whether the workspace is enabled or not.
+ * @property {string} color - Color of the workspace.
  */
 
 const Workspace = getSequelize().define('workspaces', {
@@ -76,6 +78,11 @@ const Workspace = getSequelize().define('workspaces', {
         allowNull: false,
         defaultValue: true,
     },
+    color: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "#007BFF"
+    }
 });
 
 /**
@@ -127,7 +134,8 @@ export async function createWorkspace(title, description, is_private, users_id, 
         description: description,
         is_private: is_private,
         users_id: users_id,
-        owner_id: owner_id
+        owner_id: owner_id,
+        color: getRandomColor()
     })
 }
 

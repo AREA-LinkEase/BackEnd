@@ -39,6 +39,8 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
  *                     type: integer
  *                   title:
  *                     type: string
+ *                   color:
+ *                     type: string
  *                   description:
  *                     type: string
  *                   workflow:
@@ -195,6 +197,8 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
  *                   type: integer
  *                 title:
  *                   type: string
+ *                 color:
+                     type: string
  *                 description:
  *                   type: string
  *                 is_private:
@@ -418,7 +422,8 @@ export default function index(app) {
                     workspace_id: automate.workspace_id,
                     is_enabled: automate.is_enabled,
                     views: automate.views,
-                    workflow: automate.workflow
+                    workflow: automate.workflow,
+                    color: automate.color
                 })
             }
             return response.status(200).json(automate.toJSON())
