@@ -4,11 +4,15 @@ import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
 import {
   createEvent,
-  getActionsByServiceId,
+  getActionsByServiceId, getAllEvents,
   getEventById,
   getEventsByServiceId,
-  getTriggersByServiceId
+  getTriggersByServiceId, searchEvents
 } from "../model/events.js";
+import {upload} from "../../config/multer.js";
+import path from "path";
+import fs from "fs";
+import sharp from "sharp";
 
 /**
  * @swagger
@@ -112,7 +116,7 @@ import {
  *         description: OK. Returns the list of services matching the search.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": true}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the search.
  */
@@ -132,7 +136,7 @@ import {
  *         description: OK. Returns the list of public services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": false}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": false}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -152,7 +156,7 @@ import {
  *         description: OK. Returns the list of private services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 3, "name": "PrivateService1", "is_private": true}, {"id": 4, "name": "PrivateService2", "is_private": true}]
+ *             example: [{"id": 3, "name": "PrivateService1", "description": "description", "is_private": true}, {"id": 4, "name": "PrivateService2", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -172,7 +176,7 @@ import {
  *         description: OK. Returns the list of all services for the user.
  *         content:
  *           application/json:
- *             example: [{"id": 1, "name": "Service1", "is_private": false}, {"id": 2, "name": "Service2", "is_private": false}, {"id": 3, "name": "PrivateService1", "is_private": true}]
+ *             example: [{"id": 1, "name": "Service1", "description": "description", "is_private": false}, {"id": 2, "name": "Service2", "description": "description", "is_private": false}, {"id": 3, "name": "PrivateService1", "description": "description", "is_private": true}]
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
@@ -191,7 +195,7 @@ import {
  *       required: true
  *       content:
  *         application/json:
- *           example: {"name": "NewService", "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token", "is_private": false}
+ *           example: {"name": "NewService", "description": "description", "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token", "is_private": false}
  *     responses:
  *       '200':
  *         description: OK. Service has been created successfully.
@@ -515,7 +519,7 @@ import {
  *         description: OK. Returns details of the service.
  *         content:
  *           application/json:
- *             example: {"id": 1, "name": "Service1", "is_private": false, "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token"}
+ *             example: {"id": 1, "name": "Service1", "description": "description", "is_private": false, "client_id": "client123", "client_secret": "secret123", "scope": "read write", "auth_url": "https://example.com/auth", "token_url": "https://example.com/token"}
  *       '403':
  *         description: Forbidden. Access to the service is not allowed.
  *       '404':
@@ -545,7 +549,7 @@ import {
  *       required: true
  *       content:
  *         application/json:
- *           example: {"name": "UpdatedService", "client_id": "updated123", "client_secret": "updatedsecret123", "scope": "updated read write", "auth_url": "https://updatedexample.com/auth", "token_url": "https://updatedexample.com/token", "is_private": true}
+ *           example: {"name": "UpdatedService", "description": "description", "client_id": "updated123", "client_secret": "updatedsecret123", "scope": "updated read write", "auth_url": "https://updatedexample.com/auth", "token_url": "https://updatedexample.com/token", "is_private": true}
  *     responses:
  *       '200':
  *         description: OK. Service has been updated successfully.
@@ -592,6 +596,88 @@ import {
  *       '500':
  *         description: Internal Server Error. An error occurred during the operation.
  */
+
+/**
+ * @swagger
+ * /services/events/search/{input}:
+ *   get:
+ *     summary: Search for events by input
+ *     description: Retrieve events matching the provided input text.
+ *     tags: [Services]
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The input text to search for events.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
+ *       '401':
+ *         description: Unauthorized. Bearer token is missing or invalid.
+ *       '403':
+ *         description: Forbidden. The user does not have permission to access the events.
+ */
+
+/**
+ * @swagger
+ * /services/events/@all:
+ *   get:
+ *     summary: Get all events
+ *     description: Retrieve all events.
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
+ *       '401':
+ *         description: Unauthorized. Bearer token is missing or invalid.
+ *       '403':
+ *         description: Forbidden. The user does not have permission to access the events.
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Event:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         name:
+ *           type: string
+ *         service_id:
+ *           type: integer
+ *         workflow:
+ *           type: object
+ *         type:
+ *           type: string
+ *           enum: [action, trigger]
+ *       required:
+ *         - id
+ *         - name
+ *         - service_id
+ *         - workflow
+ *         - type
+ */
+
 
 
 export const REDIRECT_URI = "http://135.181.165.228:8080/service/callback"
@@ -692,20 +778,24 @@ export default function index(app) {
             return InternalError(response)
         }
     })
-    app.post('/services/@me', async (request, response) => {
+    app.post('/services/@me', upload.single('image'), async (request, response) => {
         try {
+            if (!request.file) return UnprocessableEntity(response)
             let body = request.body;
             let user_id = response.locals.user.id;
-            if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url', 'is_private']
+            if (!['name', 'description', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url', 'is_private']
                 .every((property) => body[property] !== undefined))
                 return UnprocessableEntity(response)
-            if (!['name', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url']
+            if (!['name', 'description', 'client_id', 'client_secret', 'scope', 'auth_url', 'token_url']
                 .every((property) => typeof body[property] === "string"))
                 return UnprocessableEntity(response)
+            if (typeof body["is_private"] === "string")
+                body["is_private"] = body["is_private"] === "true"
             if (typeof body["is_private"] !== "boolean")
                 return UnprocessableEntity(response)
-            await createService(
+            let service = await createService(
                 body["name"],
+                body["description"],
                 body["client_id"],
                 body["client_secret"],
                 body["scope"],
@@ -714,6 +804,18 @@ export default function index(app) {
                 user_id,
                 body["is_private"]
             )
+
+            const filename = `${service.id}.png`;
+            const outputPath = path.join(process.cwd(), 'public/services', filename);
+
+            if (fs.existsSync(outputPath)) {
+              fs.unlinkSync(outputPath);
+            }
+
+            await sharp(request.file.buffer)
+              .resize(256, 256)
+              .toFormat('png')
+              .toFile(outputPath);
             return response.status(200).json({result: "Service has been created successfully"});
         } catch (error) {
             return InternalError(response)
@@ -819,11 +921,12 @@ export default function index(app) {
                 return NotFound(response)
             if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
-            if (!("name" in body) || !("type" in body) || typeof body["name"] !== "string")
+            if (!("name" in body) || !("description" in body)  || !("type" in body)
+                || typeof body["name"] !== "string" || typeof body["description"] !== "string")
                 return UnprocessableEntity(response)
             if (body["type"] !== "trigger" && body["type"] !== "action")
                 return UnprocessableEntity(response)
-            await createEvent(body["name"], body["type"], service_id)
+            await createEvent(body["name"], body["description"], body["type"], service_id)
             return response.status(200).json({result: "Event has been created successfully"})
         } catch (error) {
             console.log(error)
@@ -841,7 +944,7 @@ export default function index(app) {
                 return NotFound(response)
             if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
-            if (!Object.keys(body).every((value) => ["name", "workflow"].includes(value)))
+            if (!Object.keys(body).every((value) => ["name", "description", "workflow"].includes(value)))
                 return UnprocessableEntity(response)
             let event = await getEventById(event_id)
             if (event === null)
@@ -903,7 +1006,7 @@ export default function index(app) {
             if (service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
             if (!Object.keys(body).every((value) =>
-                ["name", "client_id", "client_secret", "scope", "auth_url", "token_url", "is_private"].includes(value)))
+                ["name", "description", "client_id", "client_secret", "scope", "auth_url", "token_url", "is_private"].includes(value)))
                 return UnprocessableEntity(response)
             await service.update(body)
             return response.status(200).json({result: "Service has been updated successfully"})
@@ -930,5 +1033,50 @@ export default function index(app) {
         } catch (error) {
             return InternalError(response)
         }
+    })
+    app.get('/services/events/search/:input', async (request, response) => {
+      try {
+        let input = request.params.input
+        let events = await searchEvents(input)
+        let results = [];
+        let user_id = response.locals.user.id;
+
+        for (const event of events) {
+          let service = await getServicesById(event.service_id);
+
+          if (service.is_private) {
+            if (service.owner_id === user_id || service.users_id.includes(user_id)) {
+              results.push(event.toJSON())
+            }
+          } else {
+            results.push(event.toJSON())
+          }
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
+    })
+    app.get('/services/events/@all', async (request, response) => {
+      try {
+        let events = await getAllEvents()
+        let results = [];
+        let user_id = response.locals.user.id;
+
+        for (const event of events) {
+          let service = await getServicesById(event.service_id);
+
+          if (service.is_private) {
+            if (service.owner_id === user_id || service.users_id.includes(user_id)) {
+              results.push(event.toJSON())
+            }
+          } else {
+            results.push(event.toJSON())
+          }
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
     })
 }

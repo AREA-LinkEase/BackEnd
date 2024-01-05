@@ -41,6 +41,8 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
  *                     type: string
  *                   color:
  *                     type: string
+ *                   description:
+ *                     type: string
  *                   workflow:
  *                     type: string
  *                   workspace_id:
@@ -196,6 +198,8 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
  *                 title:
  *                   type: string
  *                 color:
+                     type: string
+ *                 description:
  *                   type: string
  *                 is_private:
  *                   type: boolean
@@ -238,6 +242,8 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
  *           type: object
  *           properties:
  *             title:
+ *               type: string
+ *             description:
  *               type: string
  *             is_private:
  *               type: boolean
@@ -315,10 +321,10 @@ export default function index(app) {
                 results.push({
                     id: automate.id,
                     title: automate.title,
+                    description: automate.description,
                     workflow: automate.workflow,
                     workspace_id: automate.workspace_id,
-                    views: automate.views,
-                    color: automate.color
+                    views: automate.views
                 })
             }
             return response.status(200).json(results)
@@ -411,6 +417,7 @@ export default function index(app) {
                 return response.status(200).json({
                     id: automate.id,
                     title: automate.title,
+                    description: automate.description,
                     is_private: automate.is_private,
                     workspace_id: automate.workspace_id,
                     is_enabled: automate.is_enabled,
@@ -439,10 +446,11 @@ export default function index(app) {
             if (workspace.owner_id !== user_id &&
                 workspace.users_id.every(user => user.id !== user_id && user.permission < 2))
                 return Forbidden(response)
-            if (!Object.keys(body).every((value) => ["title", "is_private", "is_enabled"].includes(value)))
+            if (!Object.keys(body).every((value) => ["title", "is_private", "is_enabled", "description"].includes(value)))
                 return UnprocessableEntity(response)
             if (("title" in body && typeof body['title'] !== "string") ||
-                ("is_private" in body && typeof body['is_private'] !== "boolean") |
+                ("description" in body && typeof body['title'] !== "string") ||
+                ("is_private" in body && typeof body['is_private'] !== "boolean") ||
                 ("is_enabled" in body && typeof body["is_enabled"] !== "boolean"))
                 return UnprocessableEntity(response)
             await automate.update(body)
