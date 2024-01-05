@@ -1,6 +1,7 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {Workspace} from "./workspaces.js";
+import { getRandomColor } from '../utils/get_color.js';
 
 const Automate = getSequelize().define('automates', {
     /**
@@ -15,6 +16,7 @@ const Automate = getSequelize().define('automates', {
      * @property {boolean} is_enabled - Indicates whether the automate is enabled.
      * @property {bigint} views - Number of views for the automate.
      * @property {Array} logs - JSON representation of the automate's logs.
+     * @property {string} color - Color of the automate, cannot be null.
      */
 
     id: {
@@ -86,6 +88,11 @@ const Automate = getSequelize().define('automates', {
         set: function (value) {
             this.setDataValue('logs', JSON.stringify(value));
         }
+    },
+    color: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "#007BFF"
     }
 });
 
@@ -131,7 +138,8 @@ export async function createAutomate(title, description, is_private, workspace_i
         title,
         description,
         is_private,
-        workspace_id
+        workspace_id,
+        color: getRandomColor()
     })
 }
 

@@ -79,6 +79,7 @@ describe('/workspaces/@me', () => {
             expect(workspace).toHaveProperty("owner_id")
             expect(workspace).toHaveProperty("users_id")
             expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty('color');
             expect(workspace).toHaveProperty("views")
             expect(workspace).toHaveProperty("is_enabled")
         })
@@ -98,6 +99,7 @@ describe('/workspaces/@me', () => {
             expect(workspace).toHaveProperty("owner_id")
             expect(workspace).toHaveProperty("users_id")
             expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty('color');
             expect(workspace).toHaveProperty("views")
             expect(workspace).toHaveProperty("is_enabled")
         })
@@ -117,6 +119,7 @@ describe('/workspaces/@me', () => {
             expect(workspace).toHaveProperty("owner_id")
             expect(workspace).toHaveProperty("users_id")
             expect(workspace).toHaveProperty("variables")
+            expect(workspace).toHaveProperty('color');
             expect(workspace).toHaveProperty("views")
             expect(workspace).toHaveProperty("is_enabled")
         })
@@ -146,6 +149,7 @@ describe('/workspaces/:id', () => {
         expect(response.body).toHaveProperty("owner_id")
         expect(response.body).toHaveProperty("users_id")
         expect(response.body).toHaveProperty("variables")
+        expect(response.body).toHaveProperty('color');
         expect(response.body).toHaveProperty("views")
         expect(response.body).toHaveProperty("is_enabled")
     });
