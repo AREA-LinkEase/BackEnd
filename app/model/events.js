@@ -9,6 +9,7 @@ import {Services} from "./services.js";
  * @typedef {Object} Event
  * @property {number} id - The unique identifier for the event (auto-incremented integer).
  * @property {string} name - The name of the event (string).
+ * @property {string} description - The name of the event (string).
  * @property {number} service_id - The foreign key referencing the 'id' in the 'Services' table.
  * @property {string} workflow - JSON-formatted text representing the workflow associated with the event.
  * @property {string} type - The type of the event ('action' or 'trigger').
@@ -26,6 +27,10 @@ const Events = getSequelize().define('events', {
         allowNull: false,
     },
     name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    description: {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -129,13 +134,15 @@ export async function getEventById(id) {
  * Creates a new event in the database.
  *
  * @param {string} name - The name of the event.
+ * @param {string} description - The name of the event.
  * @param {string} type - The type of the event ('action' or 'trigger').
  * @param {string} description - The description of the event.
  * @param {number} service_id - The ID of the associated service.
  */
-export async function createEvent(name, type, service_id) {
+export async function createEvent(name, description, type, service_id) {
     await Events.create({
         name,
+        description,
         type,
         service_id
     })

@@ -6,6 +6,7 @@ import {User} from "./users.js";
  * @typedef {Object} ServiceAttributes
  * @property {number} id - Primary key, auto-incremented integer.
  * @property {string} name - Name of the service.
+ * @property {string} description - Description of the service.
  * @property {string} client_id - Client ID for authentication.
  * @property {string} client_secret - Client secret for authentication.
  * @property {string} scope - Scope of the service.
@@ -24,6 +25,10 @@ const Services = getSequelize().define('services', {
         allowNull: false,
     },
     name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    description: {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -89,6 +94,7 @@ export async function getServicesById(id) {
 /**
  * Creates a new service.
  * @param {string} name - Name of the service.
+ * @param {string} description - Description of the service.
  * @param {string} client_id - Client ID for authentication.
  * @param {string} client_secret - Client secret for authentication.
  * @param {string} scope - Scope of the service.
@@ -96,11 +102,12 @@ export async function getServicesById(id) {
  * @param {string} token_url - Token URL.
  * @param {number} owner_id - The ID of the owner user.
  * @param {boolean} is_private - Indicates if the service is private.
- * @returns {Promise<void>} - A promise that resolves when the service is created.
+ * @returns {Promise<Services>} - A promise that resolves when the service is created.
  */
-export async function createService(name, client_id, client_secret, scope, auth_url, token_url, owner_id, is_private) {
-    await Services.create({
+export async function createService(name, description, client_id, client_secret, scope, auth_url, token_url, owner_id, is_private) {
+    return await Services.create({
         name,
+        description,
         client_id,
         client_secret,
         scope,
