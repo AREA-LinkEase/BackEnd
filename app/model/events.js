@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize'
+import {DataTypes, Op} from 'sequelize'
 import { getSequelize } from '../getDataBaseConnection.js'
 import {Services} from "./services.js";
 
@@ -108,6 +108,15 @@ export async function getEventsByServiceId(id) {
 }
 
 /**
+ * Retrieves all events.
+ *
+ * @returns {Promise<Event[]>} - A promise that resolves to an array of events.
+ */
+export async function getAllEvents() {
+    return Events.findAll()
+}
+
+/**
  * Retrieves an event by its ID.
  *
  * @param {number} id - The ID of the event.
@@ -127,6 +136,7 @@ export async function getEventById(id) {
  * @param {string} name - The name of the event.
  * @param {string} description - The name of the event.
  * @param {string} type - The type of the event ('action' or 'trigger').
+ * @param {string} description - The description of the event.
  * @param {number} service_id - The ID of the associated service.
  */
 export async function createEvent(name, description, type, service_id) {
@@ -135,6 +145,21 @@ export async function createEvent(name, description, type, service_id) {
         description,
         type,
         service_id
+    })
+}
+
+/**
+ * Searches for events with a given name.
+ * @param {string} input - The search input to match against events name.
+ * @returns {Promise<Event[]>} - A promise resolving to an array of matching events.
+ */
+export async function searchEvents(input) {
+    return Events.findAll({
+        where: {
+            name: {
+                [Op.like]: `%${input}%`
+            }
+        }
     })
 }
 

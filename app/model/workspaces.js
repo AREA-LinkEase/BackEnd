@@ -91,6 +91,7 @@ export async function getAllWorkspaces(user_id) {
     })
     const workspaces = await Workspace.findAll()
     workspaces.forEach(workspace => {
+        if (workspace.owner_id === user_id) return;
         for (const user of workspace.users_id)
             if (user.id === user_id)
                 result.push(workspace)
