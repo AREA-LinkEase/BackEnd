@@ -34,15 +34,15 @@ describe('/services/@me', () => {
     test('should create a service', async () => {
         const response = await request(app)
             .post('/services/@me')
-            .send({
-                "name": "test",
-                "client_id": "test",
-                "client_secret": "test",
-                "scope": "test",
-                "auth_url": "test",
-                "token_url": "test",
-                "is_private": false
-            })
+            .field("name", "test")
+            .field("description", "test")
+            .field("client_id", "test")
+            .field("client_secret", "test")
+            .field("scope", "test")
+            .field("auth_url", "test")
+            .field("token_url", "test")
+            .field("is_private", false)
+            .attach('image', __dirname + '/test_picture.png')
             .set("Authorization", await getToken());
 
         expect(response.status).toBe(200);
@@ -56,6 +56,7 @@ describe('/services/@me', () => {
         expect(Array.isArray(response.body)).toBe(true);
         response.body.forEach((service) => {
             expect(service).toHaveProperty("name")
+            expect(service).toHaveProperty("description")
             expect(service).toHaveProperty("client_id")
             expect(service).toHaveProperty("client_secret")
             expect(service).toHaveProperty("scope")
@@ -90,6 +91,7 @@ describe('/services/:id', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("name")
+        expect(response.body).toHaveProperty("description")
         expect(response.body).toHaveProperty("client_id")
         expect(response.body).toHaveProperty("client_secret")
         expect(response.body).toHaveProperty("scope")
@@ -170,6 +172,7 @@ describe('Create event', () => {
             .post('/services/1/events')
             .send({
                 "name": "testAction",
+                "description": "description",
                 "type": "action"
             })
             .set("Authorization", await getToken());
@@ -186,6 +189,7 @@ describe('Create event', () => {
         expect(response.body.length).toBeGreaterThanOrEqual(1);
         response.body.forEach((action) => {
             expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("description")
             expect(action).toHaveProperty("service_id")
             expect(action).toHaveProperty("id")
             expect(action).toHaveProperty("workflow")
@@ -198,6 +202,7 @@ describe('Create event', () => {
             .post('/services/1/events')
             .send({
                 "name": "testTrigger",
+                "description": "description",
                 "type": "trigger"
             })
             .set("Authorization", await getToken());
@@ -214,6 +219,7 @@ describe('Create event', () => {
         expect(response.body.length).toBeGreaterThanOrEqual(1);
         response.body.forEach((action) => {
             expect(action).toHaveProperty("name")
+            expect(action).toHaveProperty("description")
             expect(action).toHaveProperty("service_id")
             expect(action).toHaveProperty("id")
             expect(action).toHaveProperty("workflow")
@@ -319,5 +325,24 @@ describe('access test', () => {
         const response = await request(app).get('/services/1');
 
         expect(response.status).toBe(401);
+    });
+})
+
+describe('Search an event', () => {
+    test('should get an event', async () => {
+        const response = await request(app)
+          .get('/services/events/search/aa')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+    test('should get all events', async () => {
+        const response = await request(app)
+          .get('/services/events/@all')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
     });
 })
