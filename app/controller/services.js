@@ -4,10 +4,10 @@ import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
 import {
   createEvent,
-  getActionsByServiceId,
+  getActionsByServiceId, getAllEvents,
   getEventById,
   getEventsByServiceId,
-  getTriggersByServiceId
+  getTriggersByServiceId, searchEvents
 } from "../model/events.js";
 import {upload} from "../../config/multer.js";
 import path from "path";
@@ -597,6 +597,88 @@ import sharp from "sharp";
  *         description: Internal Server Error. An error occurred during the operation.
  */
 
+/**
+ * @swagger
+ * /services/events/search/{input}:
+ *   get:
+ *     summary: Search for events by input
+ *     description: Retrieve events matching the provided input text.
+ *     tags: [Services]
+ *     parameters:
+ *       - in: path
+ *         name: input
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The input text to search for events.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
+ *       '401':
+ *         description: Unauthorized. Bearer token is missing or invalid.
+ *       '403':
+ *         description: Forbidden. The user does not have permission to access the events.
+ */
+
+/**
+ * @swagger
+ * /services/events/@all:
+ *   get:
+ *     summary: Get all events
+ *     description: Retrieve all events.
+ *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved events.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Event'
+ *       '401':
+ *         description: Unauthorized. Bearer token is missing or invalid.
+ *       '403':
+ *         description: Forbidden. The user does not have permission to access the events.
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Event:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         name:
+ *           type: string
+ *         service_id:
+ *           type: integer
+ *         workflow:
+ *           type: object
+ *         type:
+ *           type: string
+ *           enum: [action, trigger]
+ *       required:
+ *         - id
+ *         - name
+ *         - service_id
+ *         - workflow
+ *         - type
+ */
+
+
 
 export const REDIRECT_URI = "http://135.181.165.228:8080/service/callback"
 
@@ -951,5 +1033,50 @@ export default function index(app) {
         } catch (error) {
             return InternalError(response)
         }
+    })
+    app.get('/services/events/search/:input', async (request, response) => {
+      try {
+        let input = request.params.input
+        let events = await searchEvents(input)
+        let results = [];
+        let user_id = response.locals.user.id;
+
+        for (const event of events) {
+          let service = await getServicesById(event.service_id);
+
+          if (service.is_private) {
+            if (service.owner_id === user_id || service.users_id.includes(user_id)) {
+              results.push(event.toJSON())
+            }
+          } else {
+            results.push(event.toJSON())
+          }
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
+    })
+    app.get('/services/events/@all', async (request, response) => {
+      try {
+        let events = await getAllEvents()
+        let results = [];
+        let user_id = response.locals.user.id;
+
+        for (const event of events) {
+          let service = await getServicesById(event.service_id);
+
+          if (service.is_private) {
+            if (service.owner_id === user_id || service.users_id.includes(user_id)) {
+              results.push(event.toJSON())
+            }
+          } else {
+            results.push(event.toJSON())
+          }
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
     })
 }

@@ -327,3 +327,22 @@ describe('access test', () => {
         expect(response.status).toBe(401);
     });
 })
+
+describe('Search an event', () => {
+    test('should get an event', async () => {
+        const response = await request(app)
+          .get('/services/events/search/aa')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+    test('should get all events', async () => {
+        const response = await request(app)
+          .get('/services/events/@all')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+})
