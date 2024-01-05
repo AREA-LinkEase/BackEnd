@@ -38,6 +38,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create automate
     await Automate.create({
         title: "An automate",
+        description: "a description",
         is_private: false,
         workspace_id: 1,
         logs: ["test"]
@@ -45,6 +46,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create service
     await Services.create({
         name: "aaaaaa",
+        description: "aaaaaa",
         client_id: "aaaaaa",
         client_secret: "aaaaaaa",
         scope: "aaaaaaaaa",
@@ -56,6 +58,7 @@ async function feedDatabase(User, Automate, Workspace,  Events, Services) {
     // Create event
     await Events.create({
         name: "aaaaaa",
+        description: "description",
         service_id: 1,
         type: "action"
     })
