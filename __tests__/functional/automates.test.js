@@ -37,12 +37,12 @@ describe('/automates/:id', () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty('id');
         expect(response.body).toHaveProperty('title');
+        expect(response.body).toHaveProperty('description');
         expect(response.body).toHaveProperty('is_private');
         expect(response.body).toHaveProperty('workspace_id');
         expect(response.body).toHaveProperty('is_enabled');
         expect(response.body).toHaveProperty('views');
         expect(response.body).toHaveProperty('workflow');
-        expect(response.body).toHaveProperty('description');
     });
     test('should edit title of automate', async () => {
         const response = await request(app)
