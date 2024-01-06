@@ -59,9 +59,13 @@ const User = getSequelize().define('users', {
         allowNull: false,
         defaultValue: 'default',
         validate: {
-            isIn: [['google', 'discord', 'microsoft', 'default']],
+            isIn: [['google', 'discord', 'microsoft', 'github', 'default']],
         },
         comment: 'google | discord | microsoft | default',
+    },
+    tiers_id: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
 });
 
@@ -85,6 +89,20 @@ export async function getUserById(id) {
         where: {
             id: id
         },
+    })
+}
+
+/**
+ * Retrieves a user by their tiers_id.
+ *
+ * @param {number} tiers_id - The tiers_id of the user.
+ * @returns {Promise<User|null>} A promise that resolves to the user with the specified tiers_id or null if not found.
+ */
+export async function getUserByTiersId(tiers_id) {
+    return await User.findOne({
+        where: {
+            tiers_id: tiers_id
+        }
     })
 }
 
@@ -133,18 +151,20 @@ export async function createDefaultUser(username, email, password) {
 }
 
 /**
- * Creates a user with the provided username, email, and type.
+ * Creates a user with the provided username, email, type and tiers_id.
  *
  * @param {string} username - The username of the new user.
  * @param {string} email - The email address of the new user.
  * @param {string} type - The type of the new user.
+ * @param {string} tiers_id - The id of the tiers connexion
  * @returns {Promise<User>} A promise that resolves to the newly created user.
  */
-export async function createServiceUser(username, email, type) {
+export async function createServiceUser(username, email, type, tiers_id) {
     return await User.create({
         username: username,
         email: email,
         type: type,
+        tiers_id: tiers_id
     })
 }
 
