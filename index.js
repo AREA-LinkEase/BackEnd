@@ -42,15 +42,13 @@ app.use(cors({
 
 
 // Connecting to the database and performing further setup
-connectDatabase().then(() => {
+connectDatabase().then(async () => {
     // Importing and executing the authentication middleware
-    import('./app/middleware/auth.js').then(({ executeAuthMiddleware }) => {
-        executeAuthMiddleware(app)
-    });
+    const { executeAuthMiddleware } = await import('./app/middleware/auth.js');
+    executeAuthMiddleware(app)
     // Importing and executing the worker middleware
-    import('./app/middleware/worker.js').then(({ executeWorkerMiddleware }) => {
-        executeWorkerMiddleware(app)
-    });
+    const { executeWorkerMiddleware } = await import('./app/middleware/worker.js');
+    executeWorkerMiddleware(app)
     // Handling socket connections
     io.on("connection", function (socket) {
         users.push(socket)
@@ -65,9 +63,8 @@ connectDatabase().then(() => {
     });
 
     // Importing and executing the default app controller
-    import('./core/controller/controller.js').then((controller) => {
-        controller.default(app, "default")
-    })
+    let controller = await import('./core/controller/controller.js');
+    controller.default(app, "default")
 })
 
 // Starting the Express app on the specified port (default: 8080)

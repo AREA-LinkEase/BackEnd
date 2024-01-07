@@ -35,7 +35,7 @@ const User = getSequelize().define('users', {
     services: {
         type: DataTypes.TEXT,
         allowNull: false,
-        defaultValue: '[]',
+        defaultValue: '{}',
         get: function () {
             return JSON.parse(this.getDataValue('services'));
         },

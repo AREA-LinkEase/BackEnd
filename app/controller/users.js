@@ -511,6 +511,13 @@ export default function index(app) {
             let results = [];
 
             for (const user of users) {
+                let alreadyPush = false;
+                for (const result of results) {
+                    if (result.id !== user.id) continue;
+                    alreadyPush = true
+                    break;
+                }
+                if (alreadyPush) continue;
                 results.push({
                     id: user.id,
                     username: user.username,
