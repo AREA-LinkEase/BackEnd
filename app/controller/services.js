@@ -684,6 +684,7 @@ export const REDIRECT_URI = "http://135.181.165.228:8080/service/callback"
 
 export default function index(app) {
     app.get('/service/connect/:id_service/:authorization', async (request, response) => {
+      try {
         let payload = getPayload("Bearer " + request.params.authorization);
         let id_service = request.params.id_service;
         try {
@@ -695,12 +696,16 @@ export default function index(app) {
 
         if (!service) return NotFound(response)
         if (service.is_private && service.owner_id !== payload.id && !service.users_id.includes(payload.id))
-            return Forbidden(response)
+          return Forbidden(response)
         response.redirect(
-            service.dataValues.auth_url + "?client_id=" +
-            service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
-            "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope) +
-            "&state=" + id_service + ',' + payload.id)
+          service.dataValues.auth_url + "?client_id=" +
+          service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
+          "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope) +
+          "&state=" + id_service + ',' + payload.id)
+      } catch (e) {
+        console.log(e)
+        return InternalError(response)
+      }
     })
     app.get('/service/callback', async (request, response) => {
         let code = request.query.code;
@@ -973,6 +978,24 @@ export default function index(app) {
         } catch (error) {
             return InternalError(response)
         }
+    })
+    app.get('/services/:id/events/:event_id', async (request, response) => {
+      try {
+        let service_id = parseInt(request.params.id);
+        let event_id = parseInt(request.params.event_id);
+        let service = await getServicesById(service_id);
+        let user_id = response.locals.user.id;
+        if (service === null)
+          return NotFound(response)
+        if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+          return Forbidden(response)
+        let event = await getEventById(event_id)
+        if (event === null)
+          return NotFound(response)
+        return response.status(200).json(event.toJSON())
+      } catch (error) {
+        return InternalError(response)
+      }
     })
     app.get('/services/:id', async (request, response) => {
         try {

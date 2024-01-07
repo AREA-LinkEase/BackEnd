@@ -318,14 +318,7 @@ export default function index(app) {
 
             for (const automate of automates) {
                 if (automate.is_private) continue;
-                results.push({
-                    id: automate.id,
-                    title: automate.title,
-                    description: automate.description,
-                    workflow: automate.workflow,
-                    workspace_id: automate.workspace_id,
-                    views: automate.views
-                })
+                results.push(automate.toJSON())
             }
             return response.status(200).json(results)
         } catch(error) {
@@ -414,17 +407,7 @@ export default function index(app) {
                 workspace.users_id.every(user => user.id !== user_id)) {
                 if (workspace.is_private)
                     return Forbidden(response)
-                return response.status(200).json({
-                    id: automate.id,
-                    title: automate.title,
-                    description: automate.description,
-                    is_private: automate.is_private,
-                    workspace_id: automate.workspace_id,
-                    is_enabled: automate.is_enabled,
-                    views: automate.views,
-                    workflow: automate.workflow,
-                    color: automate.color
-                })
+                return response.status(200).json(automate.toJSON())
             }
             return response.status(200).json(automate.toJSON())
         } catch(error) {

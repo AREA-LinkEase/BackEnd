@@ -813,13 +813,7 @@ export default function index(app) {
 
             for (const workspace of workspaces) {
                 if (workspace.is_private) continue;
-                results.push({
-                    id: workspace.id,
-                    title: workspace.title,
-                    description: workspace.description,
-                    owner_id: workspace.owner_id,
-                    views: workspace.views
-                })
+                results.push(workspace.toJSON())
             }
             return response.status(200).json(results)
         } catch(error) {
