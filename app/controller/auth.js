@@ -85,7 +85,7 @@ import {generateAndSaveImage} from "../utils/generateAndSaveImage.js";
 /**
  * @swagger
  * /auth/login/discord:
- *   post:
+ *   get:
  *     summary: Log in via discord and receive a JWT token
  *     tags: [Authentication]
  *     responses:
@@ -105,7 +105,7 @@ import {generateAndSaveImage} from "../utils/generateAndSaveImage.js";
 /**
  * @swagger
  * /auth/login/github:
- *   post:
+ *   get:
  *     summary: Log in via GitHub and receive a JWT token
  *     tags: [Authentication]
  *     responses:
@@ -125,7 +125,7 @@ import {generateAndSaveImage} from "../utils/generateAndSaveImage.js";
 /**
  * @swagger
  * /auth/login/google:
- *   post:
+ *   get:
  *     summary: Log in via Google and receive a JWT token
  *     tags: [Authentication]
  *     responses:
