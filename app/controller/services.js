@@ -686,7 +686,7 @@ import sharp from "sharp";
 
 
 
-export const REDIRECT_URI = "http://135.181.165.228:8080/service/callback"
+export const REDIRECT_URI = process.env.SERVICE_REDIRECT_URI
 
 export default function index(app) {
     app.get('/service/connect/:id_service/:authorization', async (request, response) => {
