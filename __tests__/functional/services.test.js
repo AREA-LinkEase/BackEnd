@@ -346,3 +346,14 @@ describe('Search an event', () => {
         expect(Array.isArray(response.body)).toBe(true);
     });
 })
+
+describe('GET /services/@all', () => {
+    test('should response correctly', async () => {
+        const response = await request(app)
+          .get('/services/@all')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+})

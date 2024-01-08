@@ -1,4 +1,10 @@
-import {createWorkspace, getAllWorkspaces, getWorkspaceById, searchWorkspaces} from "../model/workspaces.js"
+import {
+  createWorkspace,
+  getAllPublicWorkspaces,
+  getAllWorkspaces,
+  getWorkspaceById,
+  searchWorkspaces
+} from "../model/workspaces.js"
 import {createAutomate, getAutomatesByWorkspace} from "../model/automates.js"
 import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../utils/request_error.js"
 import {getUserById} from "../model/users.js";
@@ -623,6 +629,19 @@ export default function index(app) {
         } catch(error) {
             InternalError(response)
         }
+    })
+    app.get('/workspaces/@all', async (request, response) => {
+      try {
+        let workspaces = await getAllPublicWorkspaces()
+        let results = [];
+
+        for (const workspace of workspaces) {
+          results.push(workspace.toJSON())
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
     })
     app.get('/workspaces/@me', async (request, response) => {
         try {
