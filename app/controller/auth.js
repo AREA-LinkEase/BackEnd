@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import { downloadAvatar } from "../utils/download_avatar.js";
 import {generateAndSaveImage} from "../utils/generateAndSaveImage.js";
 
+const final_uri = process.env.FINAL_REDIRECT_URI
+
 
 /**
  * @swagger
@@ -225,14 +227,16 @@ export default function index(app) {
                 user = await getUserByTiersId(userData.id)
                 if (user === null) {
                     user = await createServiceUser(userData.username, userData.email, "discord", userData.id)
-                    await downloadAvatar("https://cdn.discordapp.com/avatars/" + userData.id + "/" + userData.avatar, "public/avatars/" + user.id)
+                    await downloadAvatar("https://cdn.discordapp.com/avatars/" + userData.id + "/" + userData.avatar, user.id)
                 }
             }
             const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
                 expiresIn: '2h',
             });
-            return response.status(200).json({jwt: "Bearer " + token})
+            //return response.status(200).json({jwt: "Bearer " + token})
+            return response.redirect(final_uri + token)
         } catch (error) {
+            console.log(error)
             InternalError(response)
         }
     })
@@ -269,19 +273,19 @@ export default function index(app) {
             })
             if (!userResult.ok) return InternalError(response)
             let userData = await userResult.json()
-            console.log(userData);
             let user = await getUserByUsername(userData.login)
             if (user === null) {
                 user = await getUserByTiersId(userData.id)
                 if (user === null) {
                     user = await createServiceUser(userData.login, userData.login, "github", userData.id)
-                    await downloadAvatar(userData.avatar_url, "public/avatars/" + user.id)
+                    await downloadAvatar(userData.avatar_url, user.id)
                 }
             }
             const token = jwt.sign({ id: user.id, email: user.login, username: user.username }, process.env.PRIVATE_KEY, {
                 expiresIn: '2h',
             });
-            return response.status(200).json({jwt: "Bearer " + token})
+            //return response.status(200).json({jwt: "Bearer " + token})
+            return response.redirect(final_uri + token)
         } catch (error) {
             console.log(error);
             InternalError(response)
@@ -326,13 +330,14 @@ export default function index(app) {
                 user = await getUserByTiersId(userData.id)
                 if (user === null) {
                     user = await createServiceUser(userData.name, userData.email, "google", userData.id)
-                    await downloadAvatar(userData.picture, "public/avatars/" + user.id)
+                    await downloadAvatar(userData.picture, user.id)
                 }
             }
             const token = jwt.sign({ id: user.id, email: user.email, username: user.username }, process.env.PRIVATE_KEY, {
                 expiresIn: '2h',
             });
-            return response.status(200).json({jwt: "Bearer " + token})
+            //return response.status(200).json({jwt: "Bearer " + token})
+            return response.redirect(final_uri + token)
         } catch (error) {
             console.log(error);
             InternalError(response)
