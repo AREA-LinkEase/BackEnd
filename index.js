@@ -36,9 +36,7 @@ app.use(root.json())
 app.use('/docs', swaggerServe, swaggerSetup);
 
 // Configuring CORS for specific origins
-app.use(cors({
-    origin: ['http://localhost:8081', 'http://135.181.165.228:8081']
-}));
+app.use(cors());
 
 
 // Connecting to the database and performing further setup
