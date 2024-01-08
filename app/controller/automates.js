@@ -1,4 +1,5 @@
 import {
+    getAllPublicAutomates,
     getAutomateById,
     searchAutomates,
 } from "../model/automates.js"
@@ -310,6 +311,22 @@ import { Forbidden, InternalError, NotFound, UnprocessableEntity } from "../util
 
 
 export default function index(app) {
+    app.get('/automates/@all', async (request, response) => {
+        try {
+            let automates = await getAllPublicAutomates()
+            let results = [];
+
+            for (const automate of automates) {
+                let workspace = await getWorkspaceById(automate.workspace_id)
+
+                if (workspace.is_private) continue;
+                results.push(automate.toJSON())
+            }
+            return response.status(200).json(results)
+        } catch(error) {
+            InternalError(response)
+        }
+    })
     app.get('/automates/search/:input', async (request, response) => {
         try {
             let input = request.params.input
