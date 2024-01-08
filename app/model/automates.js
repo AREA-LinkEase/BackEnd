@@ -111,6 +111,18 @@ export async function getAutomatesByWorkspace(workspace_id) {
 }
 
 /**
+ * Gets all public automates.
+ * @returns {Promise<Automate[]>} - A promise resolving to an array of automates.
+ */
+export async function getAllPublicAutomates() {
+    return await Automate.findAll({
+        where: {
+            is_private: false
+        }
+    })
+}
+
+/**
  * Get an automate by its ID.
  *
  * @param {number} id - ID of the automate.

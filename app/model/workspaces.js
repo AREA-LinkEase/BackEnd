@@ -1,7 +1,7 @@
 import {DataTypes, Op} from 'sequelize'
 import {getSequelize} from '../getDataBaseConnection.js'
 import {User} from "./users.js";
-import { getRandomColor } from '../utils/get_color.js';
+import {getRandomColor} from '../utils/get_color.js';
 
 /**
  * @typedef {Object} WorkspaceModel
@@ -104,6 +104,18 @@ export async function getAllWorkspaces(user_id) {
                 result.push(workspace)
     });
     return result
+}
+
+/**
+ * Gets all public workspaces.
+ * @returns {Promise<WorkspaceModel[]>} - A promise resolving to an array of workspaces.
+ */
+export async function getAllPublicWorkspaces() {
+    return await Workspace.findAll({
+        where: {
+            is_private: false
+        }
+    })
 }
 
 /**

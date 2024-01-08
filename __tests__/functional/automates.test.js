@@ -127,3 +127,14 @@ describe('/automates/:id', () => {
         expect(response.status).toBe(401);
     });
 });
+
+describe('GET /automates/@all', () => {
+    test('should response correctly', async () => {
+        const response = await request(app)
+          .get('/automates/@all')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+})
