@@ -286,3 +286,14 @@ describe('GET /workspaces/search/:input', () => {
         expect(response.body).toHaveLength(0);
     });
 })
+
+describe('GET /workspaces/@all', () => {
+    test('should response correctly', async () => {
+        const response = await request(app)
+          .get('/workspaces/@all')
+          .set("Authorization", await getToken());
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+    });
+})

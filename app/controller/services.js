@@ -1,4 +1,10 @@
-import {createService, getAllServicesById, getServicesById, searchServices} from "../model/services.js";
+import {
+  createService,
+  getAllPublicServices,
+  getAllServicesById,
+  getServicesById,
+  searchServices
+} from "../model/services.js";
 import {getUserById, updateUser} from "../model/users.js";
 import { getPayload } from "../utils/get_payload.js";
 import {BadRequest, Forbidden, InternalError, NotFound, UnprocessableEntity} from "../utils/request_error.js";
@@ -736,6 +742,19 @@ export default function index(app) {
             services
         })
         response.status(200).json({result: "success"})
+    })
+    app.get('/services/@all', async (request, response) => {
+      try {
+        let services = await getAllPublicServices()
+        let results = [];
+
+        for (const service of services) {
+          results.push(service.toJSON())
+        }
+        return response.status(200).json(results)
+      } catch(error) {
+        InternalError(response)
+      }
     })
     app.get('/services/search/:input', async (request, response) => {
         try {
