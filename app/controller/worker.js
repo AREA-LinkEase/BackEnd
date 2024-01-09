@@ -199,8 +199,8 @@ export default function index(app) {
             let users = [];
 
             users.push(await getUserById(workspace.owner_id))
-            for (const user_id of workspace.users_id)
-                users.push(await getUserById(user_id))
+            for (const user of workspace.users_id)
+                users.push(await getUserById(user.id))
 
             for (const user of users) {
                 let tokens = {}
