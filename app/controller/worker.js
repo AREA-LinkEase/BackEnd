@@ -211,7 +211,8 @@ export default function index(app) {
                     if (accessToken)
                         tokens[serviceName] = accessToken
                 }
-                users[i].tokens = tokens;
+                user.tokens = tokens;
+                users[i] = {...user};
             }
 
             return response.status(200).json({
