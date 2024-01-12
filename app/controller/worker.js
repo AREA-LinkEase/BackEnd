@@ -198,9 +198,9 @@ export default function index(app) {
             let workspace = await getWorkspaceById(automate.workspace_id);
             let users = [];
 
-            users.push(await getUserById(workspace.owner_id))
+            users.push((await getUserById(workspace.owner_id)).toJSON())
             for (const user of workspace.users_id)
-                users.push(await getUserById(user.id))
+                users.push((await getUserById(user.id)).toJSON())
 
             for (const [i, user] of users.entries()) {
                 let tokens = {}
