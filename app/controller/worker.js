@@ -202,7 +202,7 @@ export default function index(app) {
             for (const user of workspace.users_id)
                 users.push(await getUserById(user.id))
 
-            for (const user of users) {
+            for (const [i, user] of users.entries()) {
                 let tokens = {}
 
                 for (const serviceName of Object.keys(user.services)) {
@@ -211,7 +211,7 @@ export default function index(app) {
                     if (accessToken)
                         tokens[serviceName] = accessToken
                 }
-                user.tokens = tokens;
+                users[i].tokens = tokens;
             }
 
             return response.status(200).json({
