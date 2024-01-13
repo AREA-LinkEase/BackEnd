@@ -179,7 +179,11 @@ export default function index(app) {
             if (automate === null)
                 return NotFound(response)
             let logs = [...automate.logs, ...body.logs];
-            automate.update({logs})
+            let is_enabled = automate.is_enabled;
+            for (const log of body.logs)
+                if (log.status === "error")
+                    is_enabled = false;
+            automate.update({logs, is_enabled})
             return response.status(200).json({result: "Automate updated successfully"})
         } catch(error) {
             return InternalError(response)
