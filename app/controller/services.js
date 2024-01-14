@@ -734,7 +734,13 @@ export default function index(app) {
         query.append('redirect_uri', REDIRECT_URI);
         query.append('scope', service.dataValues.scope);
         query.append('code', code);
-        const data = await fetch(service.dataValues.token_url, { method: "POST", body: query }).then(response => response.json());
+        const data = await fetch(service.dataValues.token_url, {
+          method: "POST",
+          body: query,
+          headers: {
+            'Accept': "application/json"
+          }
+        }).then(response => response.json());
         let user = await getUserById(user_id)
         let services = user.services
         services[service.dataValues.name] = data
