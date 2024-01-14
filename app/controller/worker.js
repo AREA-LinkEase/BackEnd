@@ -189,6 +189,20 @@ export default function index(app) {
             return InternalError(response)
         }
     })
+    app.put('/worker/automate/:id/variables', async (request, response) => {
+        try {
+            let automate_id = parseInt(request.params.id)
+            let body = request.body;
+            let automate = await getAutomateById(automate_id)
+            if (automate === null)
+                return NotFound(response)
+            let variables = {...automate.variables, body};
+            automate.update({variables})
+            return response.status(200).json({result: "Automate updated successfully"})
+        } catch(error) {
+            return InternalError(response)
+        }
+    })
     app.get('/worker/@next', async (request, response) => {
         try {
             let automate = await getAutomateById(id);
