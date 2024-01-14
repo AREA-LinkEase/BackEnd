@@ -993,7 +993,7 @@ export default function index(app) {
             let user_id = response.locals.user.id;
             if (service === null)
                 return NotFound(response)
-            if (service.is_private && service.owner_id !== user_id && !service.users_id.includes(user_id))
+            if (service.owner_id !== user_id && !service.users_id.includes(user_id))
                 return Forbidden(response)
             let event = await getEventById(event_id)
             if (event === null)
