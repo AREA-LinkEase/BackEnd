@@ -706,7 +706,7 @@ export default function index(app) {
         response.redirect(
           service.dataValues.auth_url + "?client_id=" +
           service.dataValues.client_id + "&redirect_uri=" + encodeURIComponent(REDIRECT_URI) +
-          "&response_type=code&scope=" + encodeURIComponent(service.dataValues.scope) +
+          "&response_type=code&prompt=consent&access_type=offline&scope=" + encodeURIComponent(service.dataValues.scope) +
           "&state=" + id_service + ',' + payload.id)
       } catch (e) {
         console.log(e)
