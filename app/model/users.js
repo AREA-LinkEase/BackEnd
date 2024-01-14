@@ -237,7 +237,11 @@ export async function getAccessToken(userId, serviceId) {
     let user = await getUserById(userId);
     if (user === null) throw "undefined user"
     let refreshToken = user.services[service.name]?.refresh_token;
-    if (refreshToken === undefined) throw "undefined refresh token"
+    if (refreshToken === undefined) {
+        if ("access_token" in user.services[service.name])
+            return user.services[service.name].access_token
+        throw "undefined refresh token"
+    }
     const query = new URLSearchParams();
     query.append('client_id', service.client_id);
     query.append('client_secret', service.client_secret);
