@@ -1,0 +1,28 @@
+name: TestAPI
+
+on: [pull_request]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: "MIICWgIBAAKBgHKC"
+      WORKER_KEY: "B5)[GQ!q-XXpB#@k%n4OK]g}P#1~h;Fp8i2^Fc'9-NXas}'a^="
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+          timeout 3m npm i || exit 1
+
+      - name: Execute test
+        run: |
+          npm test
