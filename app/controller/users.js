@@ -10,6 +10,9 @@ import * as path from "path";
 import sharp from "sharp";
 import {upload} from "../../config/multer.js";
 import * as fs from 'fs'
+import request from "supertest";
+import {getAllServices} from "../model/services.js";
+import {getEventById, getEventsByServiceId} from "../model/events.js";
 
 /**
  * @swagger
@@ -391,6 +394,45 @@ import * as fs from 'fs'
  */
 
 export default function index(app) {
+    app.get("/about.json", async (request, response) => {
+        let services = await getAllServices()
+        let servicesInfo = [];
+
+        for (const service of services) {
+            let events = await getEventsByServiceId(service.id)
+            let actions = [];
+            let triggers = [];
+
+            for (const event of events) {
+                if (event.type === "action") {
+                    actions.push({
+                        "name": event.name,
+                        "description": event.description
+                    })
+                } else {
+                    triggers.push({
+                        "name": event.name,
+                        "description": event.description
+                    })
+                }
+            }
+            servicesInfo.push({
+                "name": service.name,
+                "description": service.description,
+                actions,
+                triggers
+            })
+        }
+        response.status(200).json({
+            "client": {
+                "host": "135.181.165.228",
+                "port": "8080"
+            } ,
+            "server": {
+                "services": servicesInfo
+            }
+        })
+    })
     app.get('/users/@me/services/access_token/:id', async (request, response) => {
         try {
             let serviceId = parseInt(request.params.id);
